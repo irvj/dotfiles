@@ -12,7 +12,6 @@ apt install -y \
   curl \
   wget \
   tmux \
-  neovim \
   zsh \
   ufw \
   htop \
@@ -25,6 +24,13 @@ apt install -y \
 # --- install starship ---
 
 curl -sS https://starship.rs/install.sh | sh -s -- -y
+
+# --- install neovim ---
+curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
+tar xzf nvim-linux-x86_64.tar.gz
+mv nvim-linux-x86_64 /opt/nvim
+ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
+rm nvim-linux-x86_64.tar.gz
 
 # --- install lazygit ---
 
