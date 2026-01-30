@@ -1,0 +1,48 @@
+[init]
+  defaultBranch = main
+
+[core]
+  editor = nvim
+  autocrlf = input
+
+[pull]
+  rebase = true
+
+[push]
+  default = current
+
+[alias]
+  st = status
+  co = checkout
+  br = branch
+  ci = commit
+  unstage = reset HEAD --
+  last = log -1 HEAD
+  lg = log --oneline --graph --decorate
+
+[color]
+  ui = auto
+
+[include]
+  path = ~/.gitconfig.local
+
+# -----------------------------------------------------------
+# SETUP: Create ~/.gitconfig.local with your identity:
+#
+#   [user]
+#     name = Your Name
+#     email = your@email.com
+#
+# -----------------------------------------------------------
+# OPTIONAL: Use different identities per directory:
+#
+# Add to this file:
+#   [includeIf "gitdir:~/work/"]
+#     path = ~/.gitconfig.work
+#
+#   [includeIf "gitdir:~/personal/"]
+#     path = ~/.gitconfig.personal
+#
+# Then create ~/.gitconfig.work and ~/.gitconfig.personal
+# with the appropriate [user] blocks.
+# -----------------------------------------------------------

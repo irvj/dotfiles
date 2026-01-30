@@ -1,0 +1,99 @@
+# --- general ---
+add_newline = true
+
+# --- prompt format ---
+format = """
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_status\
+$nodejs\
+$php\
+$python\
+$docker_context\
+$cmd_duration\
+$line_break\
+$character"""
+
+# --- right prompt ---
+right_format = "$time"
+
+# --- username ---
+[username]
+show_always = true
+format = "[$user]($style)@"
+style_user = "green"
+
+# --- hostname ---
+[hostname]
+ssh_only = false
+format = "[$hostname]($style) "
+style = "green"
+
+# --- directory ---
+[directory]
+truncation_length = 4
+truncate_to_repo = false
+style = "cyan bold"
+
+# --- git branch ---
+[git_branch]
+format = "[$symbol$branch]($style) "
+symbol = " "
+style = "purple bold"
+
+# --- git status ---
+[git_status]
+format = '([$all_status$ahead_behind]($style) )'
+style = "red bold"
+conflicted = "="
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+untracked = "?${count}"
+stashed = "*${count}"
+modified = "!${count}"
+staged = "+${count}"
+
+# --- command duration ---
+[cmd_duration]
+min_time = 500
+format = "[$duration]($style) "
+style = "yellow"
+
+# --- node ---
+[nodejs]
+format = "[$symbol($version)]($style) "
+symbol = " "
+style = "green"
+
+# --- php ---
+[php]
+format = "[$symbol($version)]($style) "
+symbol = " "
+style = "purple"
+
+# --- python ---
+[python]
+format = "[$symbol($version)]($style) "
+symbol = " "
+style = "yellow"
+
+# --- docker ---
+[docker_context]
+format = "[$symbol$context]($style) "
+symbol = " "
+style = "blue"
+
+# --- time ---
+[time]
+disabled = false
+format = "[$time]($style)"
+style = "white dimmed"
+time_format = "%H:%M"
+
+# --- prompt character ---
+[character]
+success_symbol = "[❯](green bold)"
+error_symbol = "[❯](red bold)"
