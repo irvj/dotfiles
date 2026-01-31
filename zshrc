@@ -39,6 +39,7 @@ alias gl='git pull'
 alias gd='git diff'
 alias gco='git checkout'
 alias gb='git branch'
+alias gcl='git clone'
 alias glog='git log --oneline --graph'
 alias lg='lazygit'
 
