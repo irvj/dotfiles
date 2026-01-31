@@ -1,6 +1,6 @@
 # dotfiles
 
-Personal dotfiles and machine setup scripts for macOS and Linux.
+Personal dotfiles and machine setup scripts for macOS and Linux. One curl command sets up a full terminal environment: zsh with [Starship](https://starship.rs) prompt (powerline display, Nord palette), tmux, neovim with [LazyVim](https://www.lazyvim.org), lazygit, and a curated set of CLI tools.
 
 ## Routes
 
