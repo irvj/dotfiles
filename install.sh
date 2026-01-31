@@ -24,4 +24,8 @@ if [ ! -d ~/.config/nvim ]; then
   rm -rf ~/.config/nvim/.git
 fi
 
+# --- symlink nvim plugin configs ---
+
+ln -sf $DOTFILES/nvim/lua/plugins/colorscheme.lua ~/.config/nvim/lua/plugins/colorscheme.lua
+
 echo "dotfiles installed. open nvim to finish lazyvim setup."
