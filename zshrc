@@ -7,6 +7,10 @@ setopt appendhistory
 setopt sharehistory
 setopt hist_ignore_dups
 
+# --- path ---
+
+export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+
 # --- plugins ---
 
 source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
@@ -62,10 +66,6 @@ extract() {
     *) echo "unknown format: $1" ;;
   esac
 }
-
-# --- path ---
-
-export PATH="$HOME/.local/bin:$PATH"
 
 # --- editor ---
 
