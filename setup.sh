@@ -8,11 +8,13 @@ AUTO_YES=false
 # --- argument parsing ---
 
 usage() {
-  echo "Usage: $0 <linux|mac> [-y]"
+  echo "Usage: $0 <mac|vps|proxmox|workstation> [-y]"
   echo ""
-  echo "  linux    Server provisioning (run as root)"
-  echo "  mac      Personal Mac setup (run as current user)"
-  echo "  -y       Skip reset confirmation prompt"
+  echo "  mac          Personal Mac setup (run as current user)"
+  echo "  vps          VPS provisioning (run as root)"
+  echo "  proxmox      Proxmox host setup (run as root)"
+  echo "  workstation  Linux workstation setup (run as current user)"
+  echo "  -y           Skip reset confirmation prompt"
   exit 1
 }
 
@@ -21,7 +23,10 @@ usage() {
 PLATFORM="$1"
 shift
 
-[[ "$PLATFORM" != "linux" && "$PLATFORM" != "mac" ]] && usage
+case "$PLATFORM" in
+  mac|vps|proxmox|workstation) ;;
+  *) usage ;;
+esac
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -29,6 +34,19 @@ while [[ $# -gt 0 ]]; do
     *) usage ;;
   esac
 done
+
+# enforce privilege model
+if [[ "$PLATFORM" == "vps" || "$PLATFORM" == "proxmox" ]]; then
+  if [[ $EUID -ne 0 ]]; then
+    echo "Error: $PLATFORM setup must be run as root."
+    exit 1
+  fi
+elif [[ "$PLATFORM" == "workstation" ]]; then
+  if [[ $EUID -eq 0 ]]; then
+    echo "Error: workstation setup should be run as your normal user, not root."
+    exit 1
+  fi
+fi
 
 # --- utility functions ---
 
@@ -85,24 +103,20 @@ reset_shell() {
   echo "Reset complete."
 }
 
-# --- linux setup ---
+# --- linux package + tool install ---
 
-setup_linux() {
-  print_header "Linux server setup"
+install_linux_packages() {
+  local pkg_cmd="$1"
 
-  if [[ $EUID -ne 0 ]]; then
-    echo "Error: linux setup must be run as root."
-    exit 1
-  fi
+  print_header "Install Linux packages"
 
-  apt update && apt upgrade -y
-  apt install -y \
+  $pkg_cmd apt update && $pkg_cmd apt upgrade -y
+  $pkg_cmd apt install -y \
     git \
     curl \
     wget \
     tmux \
     zsh \
-    ufw \
     htop \
     unzip \
     ripgrep \
@@ -111,21 +125,29 @@ setup_linux() {
     fzf
 
   # install starship
-  curl -sS https://starship.rs/install.sh | sh -s -- -y
+  curl -sS https://starship.rs/install.sh | $pkg_cmd sh -s -- -y
 
   # install neovim
   curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
   tar xzf nvim-linux-x86_64.tar.gz
-  mv nvim-linux-x86_64 /opt/nvim
-  ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
+  $pkg_cmd mv nvim-linux-x86_64 /opt/nvim
+  $pkg_cmd ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
   rm nvim-linux-x86_64.tar.gz
 
   # install lazygit
   LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
   curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
   tar xf lazygit.tar.gz lazygit
-  install lazygit /usr/local/bin
+  $pkg_cmd install lazygit /usr/local/bin
   rm lazygit lazygit.tar.gz
+}
+
+# --- vps hardening ---
+
+harden_vps() {
+  print_header "Harden VPS"
+
+  apt install -y ufw sudo
 
   # create user (skip if already exists)
   if ! id "$USERNAME" &>/dev/null; then
@@ -149,9 +171,6 @@ setup_linux() {
   # firewall
   ufw allow OpenSSH
   ufw --force enable
-
-  # set default shell to zsh
-  chsh -s "$(which zsh)" "$USERNAME"
 }
 
 # --- mac setup ---
@@ -237,25 +256,48 @@ run_install() {
 
 # --- main ---
 
-if [[ "$PLATFORM" == "mac" ]]; then
-  reset_shell "$HOME"
-  setup_mac
-  setup_zsh_plugins "$HOME" ""
-  clone_dotfiles "$HOME" ""
-  run_install "$HOME" ""
+case "$PLATFORM" in
+  mac)
+    reset_shell "$HOME"
+    setup_mac
+    setup_zsh_plugins "$HOME" ""
+    clone_dotfiles "$HOME" ""
+    run_install "$HOME" ""
 
-  print_header "Done. Restart your terminal."
+    print_header "Done. Restart your terminal."
+    ;;
 
-elif [[ "$PLATFORM" == "linux" ]]; then
-  setup_linux
-
-  if [[ -d "/home/$USERNAME" ]]; then
+  vps)
+    install_linux_packages ""
+    harden_vps
     reset_shell "/home/$USERNAME"
-  fi
+    setup_zsh_plugins "/home/$USERNAME" "sudo -u $USERNAME"
+    clone_dotfiles "/home/$USERNAME" "sudo -u $USERNAME"
+    run_install "/home/$USERNAME" "sudo -u $USERNAME"
+    chsh -s "$(which zsh)" "$USERNAME"
 
-  setup_zsh_plugins "/home/$USERNAME" "sudo -u $USERNAME"
-  clone_dotfiles "/home/$USERNAME" "sudo -u $USERNAME"
-  run_install "/home/$USERNAME" "sudo -u $USERNAME"
+    print_header "Done. SSH in as $USERNAME"
+    ;;
 
-  print_header "Done. SSH in as $USERNAME"
-fi
+  proxmox)
+    install_linux_packages ""
+    reset_shell "/root"
+    setup_zsh_plugins "/root" ""
+    clone_dotfiles "/root" ""
+    run_install "/root" ""
+    chsh -s "$(which zsh)" root
+
+    print_header "Done. Restart your shell."
+    ;;
+
+  workstation)
+    install_linux_packages "sudo"
+    reset_shell "$HOME"
+    setup_zsh_plugins "$HOME" ""
+    clone_dotfiles "$HOME" ""
+    run_install "$HOME" ""
+    sudo chsh -s "$(which zsh)" "$USER"
+
+    print_header "Done. Restart your terminal."
+    ;;
+esac
