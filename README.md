@@ -24,7 +24,7 @@ Run as: **root**
 
 - Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fzf, starship, neovim, lazygit
 - Installs ufw and sudo
-- Creates a non-root user (`irvj`) with passwordless sudo
+- Creates a non-root user (`deploy`) with passwordless sudo
 - Copies root's SSH authorized_keys to the new user
 - Disables root SSH login and password authentication
 - Enables ufw (allows OpenSSH only)

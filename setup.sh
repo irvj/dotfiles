@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-USERNAME="irvj"
+USERNAME="deploy"
 DOTFILES_REPO="https://github.com/irvj/dotfiles.git"
 AUTO_YES=false
 
