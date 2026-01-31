@@ -262,6 +262,7 @@ case "$PLATFORM" in
     setup_mac
     setup_zsh_plugins "$HOME" ""
     clone_dotfiles "$HOME" ""
+    echo "mac" > "$HOME/.dotfiles/.platform"
     run_install "$HOME" ""
 
     print_header "Done. Restart your terminal."
@@ -273,6 +274,7 @@ case "$PLATFORM" in
     reset_shell "/home/$USERNAME"
     setup_zsh_plugins "/home/$USERNAME" "sudo -u $USERNAME"
     clone_dotfiles "/home/$USERNAME" "sudo -u $USERNAME"
+    echo "vps" > "/home/$USERNAME/.dotfiles/.platform"
     run_install "/home/$USERNAME" "sudo -u $USERNAME"
     chsh -s "$(which zsh)" "$USERNAME"
 
@@ -284,6 +286,7 @@ case "$PLATFORM" in
     reset_shell "/root"
     setup_zsh_plugins "/root" ""
     clone_dotfiles "/root" ""
+    echo "proxmox" > "/root/.dotfiles/.platform"
     run_install "/root" ""
     chsh -s "$(which zsh)" root
 
@@ -295,6 +298,7 @@ case "$PLATFORM" in
     reset_shell "$HOME"
     setup_zsh_plugins "$HOME" ""
     clone_dotfiles "$HOME" ""
+    echo "workstation" > "$HOME/.dotfiles/.platform"
     run_install "$HOME" ""
     sudo chsh -s "$(which zsh)" "$USER"
 

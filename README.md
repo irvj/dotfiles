@@ -72,6 +72,10 @@ Run as: **normal user** (uses sudo for package installation)
 curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash -s workstation
 ```
 
+## Updating
+
+After initial setup, run `dotup` from any shell to pull the latest dotfiles, re-symlink configs, update zsh plugins, and upgrade packages for your platform.
+
 ## Shared across all routes
 
 - Dotfile configs: `zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`, `zed/settings.json`

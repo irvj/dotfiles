@@ -50,6 +50,7 @@ alias ..='cd ..'
 alias ...='cd ../..'
 alias v='nvim'
 alias vim='nvim'
+alias dotup='~/.dotfiles/update.sh'
 
 # --- extract function ---
 
