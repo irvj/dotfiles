@@ -26,6 +26,8 @@ fi
 
 # --- symlink nvim plugin configs ---
 
-ln -sf $DOTFILES/nvim/lua/plugins/colorscheme.lua ~/.config/nvim/lua/plugins/colorscheme.lua
+for f in $DOTFILES/nvim/lua/plugins/*.lua; do
+  ln -sf "$f" ~/.config/nvim/lua/plugins/$(basename "$f")
+done
 
 echo "dotfiles installed. open nvim to finish lazyvim setup."
