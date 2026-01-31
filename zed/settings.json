@@ -1,0 +1,64 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "vim_mode": false,
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false
+  },
+  "project_panel": {
+    "hide_root": false,
+    "show_diagnostics": "all",
+    "git_status": true,
+    "folder_icons": false,
+    "file_icons": false,
+    "hide_gitignore": false
+  },
+  "file_finder": {
+    "file_icons": true
+  },
+  "title_bar": {
+    "show_menus": false,
+    "show_user_picture": false
+  },
+  "buffer_font_family": "MesloLGS Nerd Font",
+  "ui_font_family": "MesloLGS Nerd Font",
+  "format_on_save": "off",
+  "remove_trailing_whitespace_on_save": false,
+  "ui_font_size": 14,
+  "buffer_font_size": 14,
+  "theme": {
+    "mode": "system",
+    "light": "Nord Light",
+    "dark": "Nord"
+  },
+  "minimap": {
+    "show": "always",
+    "thumb": "always",
+    "thumb_border": "left_open",
+    "current_line_highlight": "line"
+  },
+  "edit_predictions": {
+    "mode": "eager"
+  },
+  "diagnostics_max_severity": "error",
+  "diagnostics": {
+    "lsp_pull_diagnostics": {
+      "enabled": true
+    },
+    "include_warnings": true,
+    "inline": {
+      "enabled": true,
+      "max_severity": "error"
+    }
+  },
+  "scrollbar": {
+    "diagnostics": "error"
+  }
+}
