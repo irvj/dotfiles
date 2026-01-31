@@ -10,7 +10,7 @@ Run as: **current user**
 
 - Installs [Homebrew](https://brew.sh) if not already present
 - Installs packages via Homebrew: git, curl, wget, tmux, zsh, htop, ripgrep, fd, fzf, neovim, lazygit, starship
-- Symlinks dotfiles (`zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`)
+- Symlinks dotfiles (`zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`)
 - Installs [LazyVim](https://www.lazyvim.org) (neovim config)
 - Installs zsh plugins and sets zsh as default shell
 
@@ -61,7 +61,7 @@ curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash 
 Run as: **normal user** (uses sudo for package installation)
 
 - Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fzf, starship, neovim, lazygit
-- Symlinks dotfiles (`zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`)
+- Symlinks dotfiles (`zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`)
 - Installs [LazyVim](https://www.lazyvim.org) (neovim config)
 - Installs zsh plugins and sets zsh as default shell
 - Does **not** install ufw or sudo
@@ -74,7 +74,7 @@ curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash 
 
 ## Shared across all routes
 
-- Dotfile configs: `zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`
+- Dotfile configs: `zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`
 - [LazyVim](https://www.lazyvim.org) (neovim config)
 - Zsh plugins: [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions), [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
 - Sets zsh as default shell

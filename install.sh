@@ -13,6 +13,7 @@ ln -sf $DOTFILES/zshrc ~/.zshrc
 ln -sf $DOTFILES/tmux.conf ~/.tmux.conf
 ln -sf $DOTFILES/gitconfig ~/.gitconfig
 ln -sf $DOTFILES/starship.toml ~/.config/starship.toml
+ln -sf $DOTFILES/ghostty ~/.config/ghostty
 
 # --- install lazyvim ---
 
