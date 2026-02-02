@@ -40,7 +40,7 @@ Each platform case:
 6. Runs `install.sh` to symlink everything
 7. Sets zsh as default shell
 
-VPS route additionally: creates a `deploy` user with passwordless sudo, copies root's SSH keys, disables root SSH login, enables ufw firewall.
+VPS route additionally: installs Docker Engine (via Docker's official apt repository), creates a `deploy` user with passwordless sudo and `docker` group membership, copies root's SSH keys, disables root SSH login, enables ufw firewall.
 
 ## How install.sh works
 

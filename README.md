@@ -23,8 +23,9 @@ curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash 
 Run as: **root**
 
 - Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fzf, starship, neovim, lazygit
+- Installs [Docker Engine](https://docs.docker.com/engine/install/ubuntu/) (CE, CLI, containerd, Buildx, Compose plugin)
 - Installs ufw and sudo
-- Creates a non-root user (`deploy`) with passwordless sudo
+- Creates a non-root user (`deploy`) with passwordless sudo and `docker` group membership
 - Copies root's SSH authorized_keys to the new user
 - Disables root SSH login and password authentication
 - Enables ufw (allows OpenSSH only)

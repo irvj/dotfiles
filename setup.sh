@@ -142,6 +142,25 @@ install_linux_packages() {
   rm lazygit lazygit.tar.gz
 }
 
+# --- docker install ---
+
+install_docker() {
+  print_header "Install Docker"
+
+  # add docker apt repo
+  apt install -y ca-certificates gnupg
+  install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  chmod a+r /etc/apt/keyrings/docker.asc
+
+  echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list
+
+  apt update
+  apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+}
+
 # --- vps hardening ---
 
 harden_vps() {
@@ -270,7 +289,9 @@ case "$PLATFORM" in
 
   vps)
     install_linux_packages ""
+    install_docker
     harden_vps
+    usermod -aG docker "$USERNAME"
     reset_shell "/home/$USERNAME"
     setup_zsh_plugins "/home/$USERNAME" "sudo -u $USERNAME"
     clone_dotfiles "/home/$USERNAME" "sudo -u $USERNAME"
