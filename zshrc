@@ -64,6 +64,33 @@ alias gsa='git sparse-checkout add'
 alias gsl='git sparse-checkout list'
 alias gsd='git sparse-checkout disable'
 
+ghelp() {
+  local bold='\033[1m' dim='\033[2m' cyan='\033[36m' reset='\033[0m'
+
+  echo ""
+  echo "${bold} Git Aliases${reset}"
+  echo "${dim} ──────────────────────────────────────${reset}"
+  echo "  ${cyan}gs${reset}    git status"
+  echo "  ${cyan}ga${reset}    git add"
+  echo "  ${cyan}gc${reset}    git commit"
+  echo "  ${cyan}gp${reset}    git push"
+  echo "  ${cyan}gl${reset}    git pull"
+  echo "  ${cyan}gd${reset}    git diff"
+  echo "  ${cyan}gco${reset}   git checkout"
+  echo "  ${cyan}gb${reset}    git branch"
+  echo "  ${cyan}gcl${reset}   git clone"
+  echo "  ${cyan}glog${reset}  git log --oneline --graph"
+  echo "  ${cyan}lg${reset}    lazygit"
+  echo ""
+  echo "${bold} Sparse Checkout${reset}"
+  echo "${dim} ──────────────────────────────────────${reset}"
+  echo "  ${cyan}gcs${reset}   clone sparse  ${dim}<repo> <folder> ...${reset}"
+  echo "  ${cyan}gsa${reset}   sparse-checkout add"
+  echo "  ${cyan}gsl${reset}   sparse-checkout list"
+  echo "  ${cyan}gsd${reset}   sparse-checkout disable"
+  echo ""
+}
+
 # --- general aliases ---
 
 alias ll='ls -la'
