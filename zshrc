@@ -43,6 +43,27 @@ alias gcl='git clone'
 alias glog='git log --oneline --graph'
 alias lg='lazygit'
 
+# --- sparse clone ---
+
+gcs() {
+  if [[ $# -lt 2 ]]; then
+    echo "usage: gcs <repo-url> <folder1> [folder2] ..."
+    return 1
+  fi
+
+  local repo=$1
+  shift
+
+  local name=$(basename "$repo" .git)
+
+  git clone --filter=blob:none --sparse "$repo" &&
+    git -C "$name" sparse-checkout set "$@"
+}
+
+alias gsa='git sparse-checkout add'
+alias gsl='git sparse-checkout list'
+alias gsd='git sparse-checkout disable'
+
 # --- general aliases ---
 
 alias ll='ls -la'
