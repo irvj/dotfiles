@@ -7,6 +7,14 @@ setopt appendhistory
 setopt sharehistory
 setopt hist_ignore_dups
 
+# --- timezone (for SSH forwarding via SendEnv TZ) ---
+
+if [[ -f /etc/timezone ]]; then
+  export TZ=$(cat /etc/timezone)
+elif [[ -L /etc/localtime ]]; then
+  export TZ=$(readlink /etc/localtime | sed 's|.*/zoneinfo/||')
+fi
+
 # --- path ---
 
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
