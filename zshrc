@@ -117,6 +117,25 @@ extract() {
   esac
 }
 
+# --- docker helpers ---
+
+docks() {
+  local bold='\033[1m' dim='\033[2m' cyan='\033[36m' reset='\033[0m'
+
+  echo ""
+  echo "${bold} Docker Containers${reset}"
+  echo "${dim} ──────────────────────────────────────${reset}"
+
+  docker ps --format '{{.Names}}\t{{.Ports}}' | while IFS=$'\t' read -r name ports; do
+    echo "$ports" | grep -oE '127\.0\.0\.1:[0-9]+' | while read -r addr; do
+      local port="${addr#127.0.0.1:}"
+      printf "  ${cyan}%-30s${reset} http://localhost:%s\n" "$name" "$port"
+    done
+  done
+
+  echo ""
+}
+
 # --- editor ---
 
 export EDITOR=nvim
