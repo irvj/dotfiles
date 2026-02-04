@@ -14,6 +14,7 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 ├── gitconfig                 # Git config (aliases, rebase pull, includes local identity)
 ├── starship.toml             # Starship prompt (powerline segments, Nord palette)
 ├── ghostty/config            # Ghostty terminal (Nord theme, MesloLGS Nerd Font)
+├── wezterm/wezterm.lua       # WezTerm terminal (Nord theme, MesloLGS Nerd Font, Windows)
 ├── zed/settings.json         # Zed editor (Nord theme, MesloLGS Nerd Font)
 └── nvim/lua/plugins/         # LazyVim plugin overrides (symlinked into ~/.config/nvim)
     ├── colorscheme.lua       #   Nord colorscheme via gbprod/nord.nvim
@@ -77,6 +78,7 @@ The `dotup` alias (defined in `zshrc`) runs `update.sh`, which:
 - **LazyVim plugin overrides**: Files in `nvim/lua/plugins/` are symlinked into the LazyVim starter's plugin directory. Lazy.nvim auto-installs any plugins referenced in these specs.
 - **`.platform` file**: Written by `setup.sh`, read by `update.sh`, listed in `.gitignore`. If missing, `update.sh` prompts the user to select their platform.
 - **Local git identity**: `gitconfig` includes `~/.gitconfig.local` for machine-specific `[user]` name/email (not tracked in the repo).
+- **Windows (WezTerm)**: No setup script for Windows. Download the WezTerm config with a one-liner: `curl.exe -o $HOME/.wezterm.lua https://raw.githubusercontent.com/irvj/dotfiles/main/wezterm/wezterm.lua`
 
 ## Zsh aliases
 

@@ -73,13 +73,23 @@ Run as: **normal user** (uses sudo for package installation)
 curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash -s workstation
 ```
 
+### `windows` (WezTerm only)
+
+No setup script for Windows. To get the Nord-themed [WezTerm](https://wezfurlong.org/wezterm/) config, run this one-liner in PowerShell:
+
+```powershell
+curl.exe -o $HOME/.wezterm.lua https://raw.githubusercontent.com/irvj/dotfiles/main/wezterm/wezterm.lua
+```
+
+This places the config at `~/.wezterm.lua` where WezTerm automatically picks it up. Sets MesloLGS Nerd Font at size 14 with the Nord color scheme.
+
 ## Updating
 
 After initial setup, run `dotup` from any shell to pull the latest dotfiles, re-symlink configs, update zsh plugins, and upgrade packages for your platform.
 
 ## Shared across all routes
 
-- Dotfile configs: `zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`, `zed/settings.json`
+- Dotfile configs: `zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`, `wezterm/wezterm.lua`, `zed/settings.json`
 - [LazyVim](https://www.lazyvim.org) (neovim config)
 - Zsh plugins: [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions), [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
 - Sets zsh as default shell
