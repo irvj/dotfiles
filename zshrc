@@ -67,7 +67,7 @@ gcs() {
   local name=$(basename "$repo" .git)
 
   git clone --filter=blob:none --sparse "$repo" &&
-    git -C "$name" sparse-checkout set "$@"
+    git -C "$name" sparse-checkout set --no-cone "$@"
 }
 
 alias gsa='git sparse-checkout add'
