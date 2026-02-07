@@ -17,9 +17,15 @@ if [[ -z "$TZ" ]]; then
   fi
 fi
 
+# --- homebrew (mac only) ---
+
+if [[ -f ~/.dotfiles/.platform ]] && [[ "$(cat ~/.dotfiles/.platform)" == "mac" ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
 # --- path ---
 
-export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 
 # --- plugins ---
 
