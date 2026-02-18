@@ -88,6 +88,9 @@ case "$PLATFORM" in
     tar xf lazygit.tar.gz lazygit
     sudo install lazygit /usr/local/bin
     rm lazygit lazygit.tar.gz
+
+    print_header "Update starship"
+    curl -sS https://starship.rs/install.sh | sudo sh -s -- -y
     ;;
 
   proxmox)
@@ -108,6 +111,9 @@ case "$PLATFORM" in
     tar xf lazygit.tar.gz lazygit
     install lazygit /usr/local/bin
     rm lazygit lazygit.tar.gz
+
+    print_header "Update starship"
+    curl -sS https://starship.rs/install.sh | sh -s -- -y
     ;;
 
   *)
