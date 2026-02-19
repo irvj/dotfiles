@@ -122,6 +122,7 @@ install_linux_packages() {
     ripgrep \
     fd-find \
     build-essential \
+    fontconfig \
     fzf
 
   # install starship

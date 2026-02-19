@@ -165,14 +165,15 @@ case "$PLATFORM" in
       success "starship v$STARSHIP_CURRENT"
     fi
 
-    if ! fc-list | grep -qi "JetBrainsMono Nerd Font"; then
+    if ! ls "$HOME/.local/share/fonts"/JetBrainsMonoNerd* &>/dev/null; then
       info "installing JetBrains Mono Nerd Font..."
       mkdir -p "$HOME/.local/share/fonts"
-      curl -Lo /tmp/JetBrainsMono.tar.xz \
+      curl -sLo /tmp/JetBrainsMono.tar.xz \
         "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
       tar xf /tmp/JetBrainsMono.tar.xz -C "$HOME/.local/share/fonts"
       rm /tmp/JetBrainsMono.tar.xz
-      fc-cache -fv
+      command -v fc-cache &>/dev/null && fc-cache -f > /dev/null 2>&1
+      success "nerd font installed"
     fi
     ;;
 
@@ -229,14 +230,15 @@ case "$PLATFORM" in
       success "starship v$STARSHIP_CURRENT"
     fi
 
-    if ! fc-list | grep -qi "JetBrainsMono Nerd Font"; then
+    if ! ls "$HOME/.local/share/fonts"/JetBrainsMonoNerd* &>/dev/null; then
       info "installing JetBrains Mono Nerd Font..."
       mkdir -p "$HOME/.local/share/fonts"
-      curl -Lo /tmp/JetBrainsMono.tar.xz \
+      curl -sLo /tmp/JetBrainsMono.tar.xz \
         "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
       tar xf /tmp/JetBrainsMono.tar.xz -C "$HOME/.local/share/fonts"
       rm /tmp/JetBrainsMono.tar.xz
-      fc-cache -fv
+      command -v fc-cache &>/dev/null && fc-cache -f > /dev/null 2>&1
+      success "nerd font installed"
     fi
     ;;
 
