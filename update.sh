@@ -67,11 +67,11 @@ success "configs symlinked"
 # --- update lazyvim plugins ---
 
 if ! LAZY_OUTPUT=$(nvim --headless "+Lazy! sync" +qa 2>&1); then
-  error "LazyVim plugin sync failed"
+  error "lazyvim plugin sync failed"
   echo "$LAZY_OUTPUT"
   exit 1
 fi
-success "LazyVim plugins synced"
+success "lazyvim plugins synced"
 
 # --- update zsh plugins ---
 
@@ -115,9 +115,13 @@ case "$PLATFORM" in
     fi
     ;;
 
-  vps|workstation)
-    KERNEL_BEFORE=$(uname -r)
-    if ! APT_OUTPUT=$(sudo apt-get update && sudo apt-get upgrade -y 2>&1); then
+  vps|workstation|proxmox)
+    SUDO=""
+    if [[ "$PLATFORM" == "vps" || "$PLATFORM" == "workstation" ]]; then
+      SUDO="sudo"
+    fi
+
+    if ! APT_OUTPUT=$($SUDO apt-get update && $SUDO apt-get upgrade -y 2>&1); then
       error "system package update failed"
       echo "$APT_OUTPUT"
       exit 1
@@ -137,9 +141,9 @@ case "$PLATFORM" in
       info "neovim v$NVIM_CURRENT → v$NVIM_LATEST"
       curl -sLO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
       tar xzf nvim-linux-x86_64.tar.gz
-      sudo rm -rf /opt/nvim
-      sudo mv nvim-linux-x86_64 /opt/nvim
-      sudo ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
+      $SUDO rm -rf /opt/nvim
+      $SUDO mv nvim-linux-x86_64 /opt/nvim
+      $SUDO ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
       rm nvim-linux-x86_64.tar.gz
     else
       success "neovim v$NVIM_CURRENT"
@@ -151,7 +155,7 @@ case "$PLATFORM" in
       info "lazygit v$LAZYGIT_CURRENT → v$LAZYGIT_LATEST"
       curl -sLo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_LATEST}_Linux_x86_64.tar.gz"
       tar xf lazygit.tar.gz lazygit
-      sudo install lazygit /usr/local/bin
+      $SUDO install lazygit /usr/local/bin
       rm lazygit lazygit.tar.gz
     else
       success "lazygit v$LAZYGIT_CURRENT"
@@ -161,72 +165,7 @@ case "$PLATFORM" in
     STARSHIP_CURRENT=$(starship --version 2>/dev/null | head -1 | grep -Po 'starship \K\S+' || echo "none")
     if [[ "$STARSHIP_CURRENT" != "$STARSHIP_LATEST" ]]; then
       info "starship v$STARSHIP_CURRENT → v$STARSHIP_LATEST"
-      if ! curl -sS https://starship.rs/install.sh | sudo sh -s -- -y > /dev/null; then
-        error "starship install failed"
-        exit 1
-      fi
-    else
-      success "starship v$STARSHIP_CURRENT"
-    fi
-
-    if ! ls "$HOME/.local/share/fonts"/JetBrainsMonoNerd* &>/dev/null; then
-      info "installing jetbrains mono nerd font..."
-      mkdir -p "$HOME/.local/share/fonts"
-      curl -sLo /tmp/JetBrainsMono.tar.xz \
-        "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
-      tar xf /tmp/JetBrainsMono.tar.xz -C "$HOME/.local/share/fonts"
-      rm /tmp/JetBrainsMono.tar.xz
-      command -v fc-cache &>/dev/null && fc-cache -f > /dev/null 2>&1
-      success "jetbrains mono nerd font installed"
-    fi
-    ;;
-
-  proxmox)
-    if ! APT_OUTPUT=$(apt-get update && apt-get upgrade -y 2>&1); then
-      error "system package update failed"
-      echo "$APT_OUTPUT"
-      exit 1
-    fi
-    if echo "$APT_OUTPUT" | grep -q "^0 upgraded"; then
-      success "system packages up to date"
-    else
-      success "system packages upgraded"
-    fi
-    if echo "$APT_OUTPUT" | grep -qi "linux-image\|pve-kernel"; then
-      info "kernel updated, reboot recommended"
-    fi
-
-    NVIM_LATEST=$(curl -s "https://api.github.com/repos/neovim/neovim/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-    NVIM_CURRENT=$(nvim --version 2>/dev/null | head -1 | grep -Po 'v\K\S+' || echo "none")
-    if [[ "$NVIM_CURRENT" != "$NVIM_LATEST" ]]; then
-      info "neovim v$NVIM_CURRENT → v$NVIM_LATEST"
-      curl -sLO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
-      tar xzf nvim-linux-x86_64.tar.gz
-      rm -rf /opt/nvim
-      mv nvim-linux-x86_64 /opt/nvim
-      ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
-      rm nvim-linux-x86_64.tar.gz
-    else
-      success "neovim v$NVIM_CURRENT"
-    fi
-
-    LAZYGIT_LATEST=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-    LAZYGIT_CURRENT=$(lazygit --version 2>/dev/null | grep -Po ', version=\K[^,]+' || echo "none")
-    if [[ "$LAZYGIT_CURRENT" != "$LAZYGIT_LATEST" ]]; then
-      info "lazygit v$LAZYGIT_CURRENT → v$LAZYGIT_LATEST"
-      curl -sLo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_LATEST}_Linux_x86_64.tar.gz"
-      tar xf lazygit.tar.gz lazygit
-      install lazygit /usr/local/bin
-      rm lazygit lazygit.tar.gz
-    else
-      success "lazygit v$LAZYGIT_CURRENT"
-    fi
-
-    STARSHIP_LATEST=$(curl -s "https://api.github.com/repos/starship/starship/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-    STARSHIP_CURRENT=$(starship --version 2>/dev/null | head -1 | grep -Po 'starship \K\S+' || echo "none")
-    if [[ "$STARSHIP_CURRENT" != "$STARSHIP_LATEST" ]]; then
-      info "starship v$STARSHIP_CURRENT → v$STARSHIP_LATEST"
-      if ! curl -sS https://starship.rs/install.sh | sh -s -- -y > /dev/null; then
+      if ! curl -sS https://starship.rs/install.sh | $SUDO sh -s -- -y > /dev/null; then
         error "starship install failed"
         exit 1
       fi
