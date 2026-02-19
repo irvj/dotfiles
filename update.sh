@@ -97,6 +97,10 @@ fi
 
 case "$PLATFORM" in
   mac)
+    NVIM_BEFORE=$(nvim --version 2>/dev/null | head -1 | sed 's/NVIM v//' || echo "none")
+    LAZYGIT_BEFORE=$(lazygit --version 2>/dev/null | grep -oE 'version=[^,]+' | head -1 | sed 's/version=//' || echo "none")
+    STARSHIP_BEFORE=$(starship --version 2>/dev/null | head -1 | sed 's/starship //' || echo "none")
+
     brew update > /dev/null 2>&1
     if ! BREW_OUTPUT=$(HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade 2>&1); then
       error "homebrew update failed"
@@ -108,6 +112,23 @@ case "$PLATFORM" in
     else
       success "homebrew packages upgraded"
     fi
+
+    NVIM_AFTER=$(nvim --version 2>/dev/null | head -1 | sed 's/NVIM v//' || echo "none")
+    LAZYGIT_AFTER=$(lazygit --version 2>/dev/null | grep -oE 'version=[^,]+' | head -1 | sed 's/version=//' || echo "none")
+    STARSHIP_AFTER=$(starship --version 2>/dev/null | head -1 | sed 's/starship //' || echo "none")
+
+    for tool in neovim lazygit starship; do
+      case "$tool" in
+        neovim)   BEFORE="$NVIM_BEFORE"; AFTER="$NVIM_AFTER" ;;
+        lazygit)  BEFORE="$LAZYGIT_BEFORE"; AFTER="$LAZYGIT_AFTER" ;;
+        starship) BEFORE="$STARSHIP_BEFORE"; AFTER="$STARSHIP_AFTER" ;;
+      esac
+      if [[ "$BEFORE" != "$AFTER" ]]; then
+        info "$tool v$BEFORE → v$AFTER"
+      else
+        success "$tool v$AFTER"
+      fi
+    done
 
     if ! brew list --cask font-jetbrains-mono-nerd-font &>/dev/null; then
       if ! FONT_OUTPUT=$(brew install --cask font-jetbrains-mono-nerd-font 2>&1); then
