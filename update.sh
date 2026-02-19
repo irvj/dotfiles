@@ -106,8 +106,12 @@ case "$PLATFORM" in
     fi
 
     if ! brew list --cask font-jetbrains-mono-nerd-font &>/dev/null; then
-      info "installing JetBrains Mono Nerd Font..."
-      brew install --cask font-jetbrains-mono-nerd-font
+      if ! FONT_OUTPUT=$(brew install --cask font-jetbrains-mono-nerd-font 2>&1); then
+        error "jetbrains mono nerd font install failed"
+        echo "$FONT_OUTPUT"
+        exit 1
+      fi
+      success "jetbrains mono nerd font installed"
     fi
     ;;
 
@@ -166,14 +170,14 @@ case "$PLATFORM" in
     fi
 
     if ! ls "$HOME/.local/share/fonts"/JetBrainsMonoNerd* &>/dev/null; then
-      info "installing JetBrains Mono Nerd Font..."
+      info "installing jetbrains mono nerd font..."
       mkdir -p "$HOME/.local/share/fonts"
       curl -sLo /tmp/JetBrainsMono.tar.xz \
         "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
       tar xf /tmp/JetBrainsMono.tar.xz -C "$HOME/.local/share/fonts"
       rm /tmp/JetBrainsMono.tar.xz
       command -v fc-cache &>/dev/null && fc-cache -f > /dev/null 2>&1
-      success "nerd font installed"
+      success "jetbrains mono nerd font installed"
     fi
     ;;
 
@@ -231,14 +235,14 @@ case "$PLATFORM" in
     fi
 
     if ! ls "$HOME/.local/share/fonts"/JetBrainsMonoNerd* &>/dev/null; then
-      info "installing JetBrains Mono Nerd Font..."
+      info "installing jetbrains mono nerd font..."
       mkdir -p "$HOME/.local/share/fonts"
       curl -sLo /tmp/JetBrainsMono.tar.xz \
         "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
       tar xf /tmp/JetBrainsMono.tar.xz -C "$HOME/.local/share/fonts"
       rm /tmp/JetBrainsMono.tar.xz
       command -v fc-cache &>/dev/null && fc-cache -f > /dev/null 2>&1
-      success "nerd font installed"
+      success "jetbrains mono nerd font installed"
     fi
     ;;
 
