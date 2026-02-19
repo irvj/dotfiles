@@ -55,7 +55,12 @@ print_header "Re-symlink dotfiles"
 # --- update lazyvim plugins ---
 
 print_header "Update LazyVim plugins"
-nvim --headless "+Lazy! sync" +qa
+if ! LAZY_OUTPUT=$(nvim --headless "+Lazy! sync" +qa 2>&1); then
+  echo "Error updating LazyVim plugins:"
+  echo "$LAZY_OUTPUT"
+  exit 1
+fi
+echo "LazyVim plugins synced."
 
 # --- update zsh plugins ---
 
