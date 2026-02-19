@@ -103,8 +103,20 @@ case "$PLATFORM" in
     ;;
 
   vps|workstation)
-    header "System packages"
-    sudo apt update && sudo apt upgrade -y
+    KERNEL_BEFORE=$(uname -r)
+    if ! APT_OUTPUT=$(sudo apt update && sudo apt upgrade -y 2>&1); then
+      error "system package update failed"
+      echo "$APT_OUTPUT"
+      exit 1
+    fi
+    if echo "$APT_OUTPUT" | grep -q "^0 upgraded"; then
+      success "system packages up to date"
+    else
+      success "system packages upgraded"
+    fi
+    if echo "$APT_OUTPUT" | grep -qi "linux-image\|pve-kernel"; then
+      info "kernel updated, reboot recommended"
+    fi
 
     NVIM_LATEST=$(curl -s "https://api.github.com/repos/neovim/neovim/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
     NVIM_CURRENT=$(nvim --version 2>/dev/null | head -1 | grep -Po 'v\K\S+' || echo "none")
@@ -156,8 +168,19 @@ case "$PLATFORM" in
     ;;
 
   proxmox)
-    header "System packages"
-    apt update && apt upgrade -y
+    if ! APT_OUTPUT=$(apt update && apt upgrade -y 2>&1); then
+      error "system package update failed"
+      echo "$APT_OUTPUT"
+      exit 1
+    fi
+    if echo "$APT_OUTPUT" | grep -q "^0 upgraded"; then
+      success "system packages up to date"
+    else
+      success "system packages upgraded"
+    fi
+    if echo "$APT_OUTPUT" | grep -qi "linux-image\|pve-kernel"; then
+      info "kernel updated, reboot recommended"
+    fi
 
     NVIM_LATEST=$(curl -s "https://api.github.com/repos/neovim/neovim/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
     NVIM_CURRENT=$(nvim --version 2>/dev/null | head -1 | grep -Po 'v\K\S+' || echo "none")
