@@ -96,7 +96,7 @@ case "$PLATFORM" in
 
     print_header "Update lazygit"
     LAZYGIT_LATEST=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-    LAZYGIT_CURRENT=$(lazygit --version 2>/dev/null | grep -Po 'version=\K[^,]+' || echo "none")
+    LAZYGIT_CURRENT=$(lazygit --version 2>/dev/null | grep -Po ', version=\K[^,]+' || echo "none")
     if [[ "$LAZYGIT_CURRENT" != "$LAZYGIT_LATEST" ]]; then
       echo "Updating lazygit v$LAZYGIT_CURRENT -> v$LAZYGIT_LATEST"
       curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_LATEST}_Linux_x86_64.tar.gz"
@@ -145,7 +145,7 @@ case "$PLATFORM" in
 
     print_header "Update lazygit"
     LAZYGIT_LATEST=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-    LAZYGIT_CURRENT=$(lazygit --version 2>/dev/null | grep -Po 'version=\K[^,]+' || echo "none")
+    LAZYGIT_CURRENT=$(lazygit --version 2>/dev/null | grep -Po ', version=\K[^,]+' || echo "none")
     if [[ "$LAZYGIT_CURRENT" != "$LAZYGIT_LATEST" ]]; then
       echo "Updating lazygit v$LAZYGIT_CURRENT -> v$LAZYGIT_LATEST"
       curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_LATEST}_Linux_x86_64.tar.gz"
