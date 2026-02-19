@@ -34,66 +34,82 @@ else
   PLATFORM=$(cat "$PLATFORM_FILE")
 fi
 
-print_header() {
-  echo ""
-  echo "=========================================="
-  echo " $1"
-  echo "=========================================="
-  echo ""
-}
+# --- output helpers ---
+
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+RED='\033[0;31m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+success() { echo -e "${GREEN}✓${NC} $1"; }
+info()    { echo -e "${YELLOW}→${NC} $1"; }
+error()   { echo -e "${RED}✗${NC} $1"; }
+header()  { echo ""; echo -e "${BOLD}── $1 ──${NC}"; echo ""; }
+
+echo ""
 
 # --- pull latest dotfiles ---
 
-print_header "Pull latest dotfiles"
-git -C "$DOTFILES" pull
+PULL_OUTPUT=$(git -C "$DOTFILES" pull)
+if [[ "$PULL_OUTPUT" == "Already up to date." ]]; then
+  success "dotfiles up to date"
+else
+  header "Pulling dotfiles"
+  echo "$PULL_OUTPUT"
+fi
 
 # --- re-run install.sh ---
 
-print_header "Re-symlink dotfiles"
-"$DOTFILES/install.sh"
+"$DOTFILES/install.sh" > /dev/null
+success "configs symlinked"
 
 # --- update lazyvim plugins ---
 
-print_header "Update LazyVim plugins"
 if ! LAZY_OUTPUT=$(nvim --headless "+Lazy! sync" +qa 2>&1); then
-  echo "Error updating LazyVim plugins:"
+  error "LazyVim plugin sync failed"
   echo "$LAZY_OUTPUT"
   exit 1
 fi
-echo "LazyVim plugins synced."
+success "LazyVim plugins synced"
 
 # --- update zsh plugins ---
 
-print_header "Update zsh plugins"
+ZSH_UPDATED=false
 for dir in "$HOME/.zsh"/*/; do
   if [[ -d "$dir/.git" ]]; then
-    echo "Updating $(basename "$dir")..."
-    git -C "$dir" pull
+    PLUGIN_OUTPUT=$(git -C "$dir" pull)
+    if [[ "$PLUGIN_OUTPUT" != "Already up to date." ]]; then
+      ZSH_UPDATED=true
+      info "$(basename "$dir") updated"
+    fi
   fi
 done
+if ! $ZSH_UPDATED; then
+  success "zsh plugins up to date"
+fi
 
 # --- platform-specific updates ---
 
 case "$PLATFORM" in
   mac)
-    print_header "Update Homebrew packages"
+    header "Homebrew"
     brew update && brew upgrade
 
     if ! brew list --cask font-jetbrains-mono-nerd-font &>/dev/null; then
-      print_header "Install Nerd Font"
+      info "installing JetBrains Mono Nerd Font..."
       brew install --cask font-jetbrains-mono-nerd-font
     fi
     ;;
 
   vps|workstation)
-    print_header "Update system packages"
+    header "System packages"
     sudo apt update && sudo apt upgrade -y
 
-    print_header "Update neovim"
     NVIM_LATEST=$(curl -s "https://api.github.com/repos/neovim/neovim/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
     NVIM_CURRENT=$(nvim --version 2>/dev/null | head -1 | grep -Po 'v\K\S+' || echo "none")
     if [[ "$NVIM_CURRENT" != "$NVIM_LATEST" ]]; then
-      echo "Updating neovim v$NVIM_CURRENT -> v$NVIM_LATEST"
+      header "Updating neovim v$NVIM_CURRENT → v$NVIM_LATEST"
       curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
       tar xzf nvim-linux-x86_64.tar.gz
       sudo rm -rf /opt/nvim
@@ -101,37 +117,35 @@ case "$PLATFORM" in
       sudo ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
       rm nvim-linux-x86_64.tar.gz
     else
-      echo "neovim is already up to date (v$NVIM_CURRENT)"
+      success "neovim v$NVIM_CURRENT"
     fi
 
-    print_header "Update lazygit"
     LAZYGIT_LATEST=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
     LAZYGIT_CURRENT=$(lazygit --version 2>/dev/null | grep -Po ', version=\K[^,]+' || echo "none")
     if [[ "$LAZYGIT_CURRENT" != "$LAZYGIT_LATEST" ]]; then
-      echo "Updating lazygit v$LAZYGIT_CURRENT -> v$LAZYGIT_LATEST"
+      header "Updating lazygit v$LAZYGIT_CURRENT → v$LAZYGIT_LATEST"
       curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_LATEST}_Linux_x86_64.tar.gz"
       tar xf lazygit.tar.gz lazygit
       sudo install lazygit /usr/local/bin
       rm lazygit lazygit.tar.gz
     else
-      echo "lazygit is already up to date (v$LAZYGIT_CURRENT)"
+      success "lazygit v$LAZYGIT_CURRENT"
     fi
 
-    print_header "Update starship"
     STARSHIP_LATEST=$(curl -s "https://api.github.com/repos/starship/starship/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
     STARSHIP_CURRENT=$(starship --version 2>/dev/null | head -1 | grep -Po 'starship \K\S+' || echo "none")
     if [[ "$STARSHIP_CURRENT" != "$STARSHIP_LATEST" ]]; then
-      echo "Updating starship v$STARSHIP_CURRENT -> v$STARSHIP_LATEST"
+      header "Updating starship v$STARSHIP_CURRENT → v$STARSHIP_LATEST"
       if ! curl -sS https://starship.rs/install.sh | sudo sh -s -- -y > /dev/null; then
-        echo "Error: starship install failed"
+        error "starship install failed"
         exit 1
       fi
     else
-      echo "starship is already up to date (v$STARSHIP_CURRENT)"
+      success "starship v$STARSHIP_CURRENT"
     fi
 
     if ! fc-list | grep -qi "JetBrainsMono Nerd Font"; then
-      print_header "Install Nerd Font"
+      header "Installing JetBrains Mono Nerd Font"
       mkdir -p "$HOME/.local/share/fonts"
       curl -Lo /tmp/JetBrainsMono.tar.xz \
         "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
@@ -142,14 +156,13 @@ case "$PLATFORM" in
     ;;
 
   proxmox)
-    print_header "Update system packages"
+    header "System packages"
     apt update && apt upgrade -y
 
-    print_header "Update neovim"
     NVIM_LATEST=$(curl -s "https://api.github.com/repos/neovim/neovim/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
     NVIM_CURRENT=$(nvim --version 2>/dev/null | head -1 | grep -Po 'v\K\S+' || echo "none")
     if [[ "$NVIM_CURRENT" != "$NVIM_LATEST" ]]; then
-      echo "Updating neovim v$NVIM_CURRENT -> v$NVIM_LATEST"
+      header "Updating neovim v$NVIM_CURRENT → v$NVIM_LATEST"
       curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
       tar xzf nvim-linux-x86_64.tar.gz
       rm -rf /opt/nvim
@@ -157,37 +170,35 @@ case "$PLATFORM" in
       ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
       rm nvim-linux-x86_64.tar.gz
     else
-      echo "neovim is already up to date (v$NVIM_CURRENT)"
+      success "neovim v$NVIM_CURRENT"
     fi
 
-    print_header "Update lazygit"
     LAZYGIT_LATEST=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
     LAZYGIT_CURRENT=$(lazygit --version 2>/dev/null | grep -Po ', version=\K[^,]+' || echo "none")
     if [[ "$LAZYGIT_CURRENT" != "$LAZYGIT_LATEST" ]]; then
-      echo "Updating lazygit v$LAZYGIT_CURRENT -> v$LAZYGIT_LATEST"
+      header "Updating lazygit v$LAZYGIT_CURRENT → v$LAZYGIT_LATEST"
       curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_LATEST}_Linux_x86_64.tar.gz"
       tar xf lazygit.tar.gz lazygit
       install lazygit /usr/local/bin
       rm lazygit lazygit.tar.gz
     else
-      echo "lazygit is already up to date (v$LAZYGIT_CURRENT)"
+      success "lazygit v$LAZYGIT_CURRENT"
     fi
 
-    print_header "Update starship"
     STARSHIP_LATEST=$(curl -s "https://api.github.com/repos/starship/starship/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
     STARSHIP_CURRENT=$(starship --version 2>/dev/null | head -1 | grep -Po 'starship \K\S+' || echo "none")
     if [[ "$STARSHIP_CURRENT" != "$STARSHIP_LATEST" ]]; then
-      echo "Updating starship v$STARSHIP_CURRENT -> v$STARSHIP_LATEST"
+      header "Updating starship v$STARSHIP_CURRENT → v$STARSHIP_LATEST"
       if ! curl -sS https://starship.rs/install.sh | sh -s -- -y > /dev/null; then
-        echo "Error: starship install failed"
+        error "starship install failed"
         exit 1
       fi
     else
-      echo "starship is already up to date (v$STARSHIP_CURRENT)"
+      success "starship v$STARSHIP_CURRENT"
     fi
 
     if ! fc-list | grep -qi "JetBrainsMono Nerd Font"; then
-      print_header "Install Nerd Font"
+      header "Installing JetBrains Mono Nerd Font"
       mkdir -p "$HOME/.local/share/fonts"
       curl -Lo /tmp/JetBrainsMono.tar.xz \
         "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
@@ -203,4 +214,5 @@ case "$PLATFORM" in
     ;;
 esac
 
-print_header "Update complete"
+echo ""
+success "update complete"
