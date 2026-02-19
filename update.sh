@@ -93,8 +93,16 @@ fi
 
 case "$PLATFORM" in
   mac)
-    header "Homebrew"
-    brew update && brew upgrade
+    if ! BREW_OUTPUT=$(brew update && brew upgrade 2>&1); then
+      error "homebrew update failed"
+      echo "$BREW_OUTPUT"
+      exit 1
+    fi
+    if echo "$BREW_OUTPUT" | grep -q "Already up-to-date."; then
+      success "homebrew packages up to date"
+    else
+      success "homebrew packages upgraded"
+    fi
 
     if ! brew list --cask font-jetbrains-mono-nerd-font &>/dev/null; then
       info "installing JetBrains Mono Nerd Font..."
