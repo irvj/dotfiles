@@ -51,11 +51,11 @@ echo ""
 
 # --- pull latest dotfiles ---
 
-PULL_OUTPUT=$(git -C "$DOTFILES" pull)
-if [[ "$PULL_OUTPUT" == "Already up to date." ]]; then
+PULL_OUTPUT=$(git -C "$DOTFILES" pull 2>&1)
+if echo "$PULL_OUTPUT" | grep -q "Already up to date."; then
   success "dotfiles up to date"
 else
-  FILES_CHANGED=$(echo "$PULL_OUTPUT" | grep -Po '\d+(?= files? changed)' || echo "")
+  FILES_CHANGED=$(echo "$PULL_OUTPUT" | grep -oE '[0-9]+ files? changed' | grep -oE '[0-9]+' || echo "")
   info "dotfiles updated ($FILES_CHANGED files changed)"
 fi
 
@@ -93,12 +93,13 @@ fi
 
 case "$PLATFORM" in
   mac)
-    if ! BREW_OUTPUT=$( (brew update && brew upgrade) 2>&1); then
+    brew update > /dev/null 2>&1
+    if ! BREW_OUTPUT=$(HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade 2>&1); then
       error "homebrew update failed"
       echo "$BREW_OUTPUT"
       exit 1
     fi
-    if echo "$BREW_OUTPUT" | grep -q "Already up-to-date."; then
+    if [[ -z "$BREW_OUTPUT" ]]; then
       success "homebrew packages up to date"
     else
       success "homebrew packages upgraded"
