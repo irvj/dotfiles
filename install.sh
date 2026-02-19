@@ -22,6 +22,9 @@ ln -sf $DOTFILES/zed/settings.json ~/.config/zed/settings.json
 if [ ! -d ~/.config/nvim ]; then
   git clone https://github.com/LazyVim/starter ~/.config/nvim
   rm -rf ~/.config/nvim/.git
+  echo "dotfiles installed. open nvim to finish lazyvim setup."
+else
+  echo "dotfiles installed."
 fi
 
 # --- symlink nvim plugin configs ---
@@ -29,5 +32,3 @@ fi
 for f in $DOTFILES/nvim/lua/plugins/*.lua; do
   ln -sf "$f" ~/.config/nvim/lua/plugins/$(basename "$f")
 done
-
-echo "dotfiles installed. open nvim to finish lazyvim setup."

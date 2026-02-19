@@ -52,6 +52,11 @@ git -C "$DOTFILES" pull
 print_header "Re-symlink dotfiles"
 "$DOTFILES/install.sh"
 
+# --- update lazyvim plugins ---
+
+print_header "Update LazyVim plugins"
+nvim --headless "+Lazy! sync" +qa
+
 # --- update zsh plugins ---
 
 print_header "Update zsh plugins"
