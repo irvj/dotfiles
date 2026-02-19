@@ -95,7 +95,10 @@ case "$PLATFORM" in
     rm lazygit lazygit.tar.gz
 
     print_header "Update starship"
-    curl -sS https://starship.rs/install.sh | sudo sh -s -- -y
+    if ! curl -sS https://starship.rs/install.sh | sudo sh -s -- -y > /dev/null; then
+      echo "Error: starship install failed"
+      exit 1
+    fi
 
     if ! fc-list | grep -qi "JetBrainsMono Nerd Font"; then
       print_header "Install Nerd Font"
@@ -128,7 +131,10 @@ case "$PLATFORM" in
     rm lazygit lazygit.tar.gz
 
     print_header "Update starship"
-    curl -sS https://starship.rs/install.sh | sh -s -- -y
+    if ! curl -sS https://starship.rs/install.sh | sh -s -- -y > /dev/null; then
+      echo "Error: starship install failed"
+      exit 1
+    fi
 
     if ! fc-list | grep -qi "JetBrainsMono Nerd Font"; then
       print_header "Install Nerd Font"
