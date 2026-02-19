@@ -13,8 +13,8 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 ├── tmux.conf                 # Tmux config (prefix Ctrl-A, vim nav, Nord status bar)
 ├── gitconfig                 # Git config (aliases, rebase pull, includes local identity)
 ├── starship.toml             # Starship prompt (powerline segments, Nord palette)
-├── ghostty/config            # Ghostty terminal (Nord theme, MesloLGS Nerd Font)
-├── wezterm/wezterm.lua       # WezTerm terminal (Nord theme, MesloLGS Nerd Font, Windows)
+├── ghostty/config            # Ghostty terminal (Nord theme, JetBrains Mono Nerd Font)
+├── wezterm/wezterm.lua       # WezTerm terminal (Nord theme, JetBrains Mono Nerd Font, Windows)
 ├── zed/settings.json         # Zed editor (Nord theme, MesloLGS Nerd Font)
 └── nvim/lua/plugins/         # LazyVim plugin overrides (symlinked into ~/.config/nvim)
     ├── colorscheme.lua       #   Nord colorscheme via gbprod/nord.nvim
@@ -33,13 +33,14 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 | `workstation` | normal user  | apt (with sudo) | no        | no           |
 
 Each platform case:
-1. Installs system packages and CLI tools
-2. Optionally resets existing shell config (interactive prompt, skip with `-y`)
-3. Installs zsh plugins (zsh-autosuggestions, zsh-syntax-highlighting) to `~/.zsh/`
-4. Clones this repo to `~/.dotfiles`
-5. Writes a `.platform` marker file (e.g. `echo "mac" > ~/.dotfiles/.platform`)
-6. Runs `install.sh` to symlink everything
-7. Sets zsh as default shell
+1. Installs system packages and CLI tools (including fontconfig on Linux)
+2. Installs JetBrains Mono Nerd Font (Homebrew cask on mac, downloaded from Nerd Fonts GitHub releases on Linux to `~/.local/share/fonts/`)
+3. Optionally resets existing shell config (interactive prompt, skip with `-y`)
+4. Installs zsh plugins (zsh-autosuggestions, zsh-syntax-highlighting) to `~/.zsh/`
+5. Clones this repo to `~/.dotfiles`
+6. Writes a `.platform` marker file (e.g. `echo "mac" > ~/.dotfiles/.platform`)
+7. Runs `install.sh` to symlink everything
+8. Sets zsh as default shell
 
 VPS route additionally: installs Docker Engine (via Docker's official apt repository), creates a `deploy` user with passwordless sudo and `docker` group membership, copies root's SSH keys, disables root SSH login, enables ufw firewall.
 
@@ -54,31 +55,44 @@ Creates symlinks from `~/.dotfiles/` into the home directory:
 - `ghostty/` → `~/.config/ghostty` (directory symlink, uses `ln -sfn`)
 - `zed/settings.json` → `~/.config/zed/settings.json`
 
-Clones the LazyVim starter to `~/.config/nvim` if it doesn't exist, then symlinks all `nvim/lua/plugins/*.lua` files into the LazyVim plugins directory.
+Clones the LazyVim starter to `~/.config/nvim` if it doesn't exist (first install only), then symlinks all `nvim/lua/plugins/*.lua` files into the LazyVim plugins directory.
 
 ## How update works
 
-The `dotup` alias (defined in `zshrc`) runs `update.sh`, which:
+The `dotup` alias (defined in `zshrc`) runs `update.sh`. Accepts `-p` or `--platform` to re-select the platform.
 
-1. Reads platform from `~/.dotfiles/.platform` (prompts interactively if missing)
+Output uses colored status indicators: green `✓` when up to date, yellow `→` when updating, red `✗` on errors. All output is minimal — verbose command output is suppressed unless there's a failure.
+
+Steps:
+1. Reads platform from `~/.dotfiles/.platform` (prompts interactively if missing or `--platform` flag passed)
 2. Pulls latest dotfiles via git
 3. Re-runs `install.sh` (re-symlinks everything)
-4. Updates zsh plugins (git pull in each `~/.zsh/*/` directory)
-5. Runs platform-specific package upgrades:
-   - **mac**: `brew update && brew upgrade`
-   - **vps/workstation**: `sudo apt update && sudo apt upgrade -y`, re-downloads latest neovim and lazygit
-   - **proxmox**: same as vps/workstation but without sudo (runs as root)
+4. Syncs LazyVim plugins headlessly (`nvim --headless "+Lazy! sync" +qa`)
+5. Updates zsh plugins (git pull in each `~/.zsh/*/` directory)
+6. Runs platform-specific updates:
+
+**Mac:**
+- Runs `brew update && brew upgrade` (output suppressed)
+- Shows before/after version comparison for neovim, lazygit, and starship
+- Installs JetBrains Mono Nerd Font cask if missing
+
+**Linux (vps/workstation/proxmox):**
+- Uses a `$SUDO` prefix (set for vps/workstation, empty for proxmox) to deduplicate the three Linux paths into one block
+- Runs `apt-get update && apt-get upgrade` (output suppressed, shown on failure)
+- Detects kernel updates (`linux-image` or `pve-kernel`) and recommends reboot
+- Checks neovim, lazygit, and starship versions against latest GitHub releases; only downloads when a new version is available
+- Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/` if missing (checks for font files directly, no dependency on fontconfig)
 
 ## Key conventions
 
 - **Nord everywhere**: Starship, tmux, Ghostty, Zed, and Neovim all use the Nord palette.
-- **Font**: MesloLGS Nerd Font across Ghostty and Zed (provides powerline glyphs and icons).
+- **Font**: JetBrains Mono Nerd Font across Ghostty and WezTerm (provides powerline glyphs, icons, and coding ligatures). Installed automatically by `setup.sh` and verified by `update.sh`.
 - **Symlinks, not copies**: All configs are symlinked so `git pull` in `~/.dotfiles` immediately updates the live config.
 - **Directory symlinks use `ln -sfn`**: Prevents `ln -sf` from creating a nested symlink inside the target on re-runs (e.g. ghostty).
-- **LazyVim plugin overrides**: Files in `nvim/lua/plugins/` are symlinked into the LazyVim starter's plugin directory. Lazy.nvim auto-installs any plugins referenced in these specs.
-- **`.platform` file**: Written by `setup.sh`, read by `update.sh`, listed in `.gitignore`. If missing, `update.sh` prompts the user to select their platform.
+- **LazyVim plugin overrides**: Files in `nvim/lua/plugins/` are symlinked into the LazyVim starter's plugin directory. Lazy.nvim auto-installs any plugins referenced in these specs. Plugins are synced headlessly during `dotup`.
+- **`.platform` file**: Written by `setup.sh`, read by `update.sh`, listed in `.gitignore`. If missing, `update.sh` prompts the user to select their platform. Can be re-selected with `dotup -p`.
 - **Local git identity**: `gitconfig` includes `~/.gitconfig.local` for machine-specific `[user]` name/email (not tracked in the repo).
-- **Windows (WezTerm)**: No setup script for Windows. Download the WezTerm config with a one-liner: `curl.exe -o $HOME/.wezterm.lua https://raw.githubusercontent.com/irvj/dotfiles/main/wezterm/wezterm.lua`
+- **Windows (WezTerm)**: No setup script for Windows. Download the WezTerm config with a one-liner: `curl.exe -o $HOME/.wezterm.lua https://raw.githubusercontent.com/irvj/dotfiles/main/wezterm/wezterm.lua`. Font must be installed manually on Windows.
 
 ## Zsh aliases
 
@@ -92,13 +106,30 @@ The `dotup` alias (defined in `zshrc`) runs `update.sh`, which:
 | `gd`   | `git diff`                 |
 | `gco`  | `git checkout`             |
 | `gb`   | `git branch`               |
+| `gcl`  | `git clone`                |
 | `glog` | `git log --oneline --graph`|
 | `lg`   | `lazygit`                  |
+| `ll`   | `ls -la`                   |
+| `la`   | `ls -a`                    |
+| `..`   | `cd ..`                    |
+| `...`  | `cd ../..`                 |
 | `v`    | `nvim`                     |
 | `vim`  | `nvim`                     |
 | `dotup`| `~/.dotfiles/update.sh`    |
 
 `Esc Esc` prepends `sudo` to the current command line.
+
+## Zsh functions
+
+| Function  | Description                                          |
+|-----------|------------------------------------------------------|
+| `gcs`     | Sparse clone: `gcs <repo-url> <folder1> [folder2]…` |
+| `gsa`     | `git sparse-checkout add`                            |
+| `gsl`     | `git sparse-checkout list`                           |
+| `gsd`     | `git sparse-checkout disable`                        |
+| `ghelp`   | Print git alias and sparse checkout cheat sheet      |
+| `extract` | Extract archives (tar, zip, gz, bz2, xz, 7z)        |
+| `docks`   | List running Docker containers with localhost URLs   |
 
 ## Tmux bindings
 
