@@ -3,36 +3,14 @@ set -e
 
 DOTFILES="$HOME/.dotfiles"
 PLATFORM_FILE="$DOTFILES/.platform"
+RESET_PLATFORM=false
 
-# --- read platform ---
-
-if [[ ! -f "$PLATFORM_FILE" ]]; then
-  echo "No .platform file found. Select your platform:"
-  echo ""
-  while true; do
-    echo "  1) mac"
-    echo "  2) vps"
-    echo "  3) proxmox"
-    echo "  4) workstation"
-    echo ""
-    read -rp "Choose [1-4]: " choice
-    case "$choice" in
-      1) PLATFORM="mac" ;;
-      2) PLATFORM="vps" ;;
-      3) PLATFORM="proxmox" ;;
-      4) PLATFORM="workstation" ;;
-      *) echo "Invalid choice."; echo ""; continue ;;
-    esac
-    read -rp "Use '$PLATFORM'? [y/n] " confirm
-    if [[ "$confirm" =~ ^[Yy]$ ]]; then
-      echo "$PLATFORM" > "$PLATFORM_FILE"
-      break
-    fi
-    echo ""
-  done
-else
-  PLATFORM=$(cat "$PLATFORM_FILE")
-fi
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -p|--platform) RESET_PLATFORM=true; shift ;;
+    *) echo "Usage: $0 [-p|--platform]"; exit 1 ;;
+  esac
+done
 
 # --- output helpers ---
 
@@ -45,7 +23,33 @@ NC='\033[0m'
 success() { echo -e "${GREEN}✓${NC} $1"; }
 info()    { echo -e "${YELLOW}→${NC} $1"; }
 error()   { echo -e "${RED}✗${NC} $1"; }
-header()  { echo ""; echo -e "${BOLD}── $1 ──${NC}"; echo ""; }
+
+# --- read platform ---
+
+if [[ ! -f "$PLATFORM_FILE" ]] || $RESET_PLATFORM; then
+  echo ""
+  info "no .platform file found. select your platform:"
+  echo ""
+  echo "  1) mac"
+  echo "  2) vps"
+  echo "  3) proxmox"
+  echo "  4) workstation"
+  echo ""
+  while true; do
+    read -rp "  choose [1-4]: " choice
+    case "$choice" in
+      1) PLATFORM="mac"; break ;;
+      2) PLATFORM="vps"; break ;;
+      3) PLATFORM="proxmox"; break ;;
+      4) PLATFORM="workstation"; break ;;
+      *) error "invalid choice"; echo "" ;;
+    esac
+  done
+  echo "$PLATFORM" > "$PLATFORM_FILE"
+  success "platform set to $PLATFORM"
+fi
+
+PLATFORM=$(cat "$PLATFORM_FILE")
 
 echo ""
 
