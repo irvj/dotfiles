@@ -93,7 +93,7 @@ fi
 
 case "$PLATFORM" in
   mac)
-    if ! BREW_OUTPUT=$(brew update && brew upgrade 2>&1); then
+    if ! BREW_OUTPUT=$( (brew update && brew upgrade) 2>&1); then
       error "homebrew update failed"
       echo "$BREW_OUTPUT"
       exit 1
