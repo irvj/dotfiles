@@ -68,6 +68,11 @@ case "$PLATFORM" in
   mac)
     print_header "Update Homebrew packages"
     brew update && brew upgrade
+
+    if ! brew list --cask font-jetbrains-mono-nerd-font &>/dev/null; then
+      print_header "Install Nerd Font"
+      brew install --cask font-jetbrains-mono-nerd-font
+    fi
     ;;
 
   vps|workstation)
@@ -91,6 +96,16 @@ case "$PLATFORM" in
 
     print_header "Update starship"
     curl -sS https://starship.rs/install.sh | sudo sh -s -- -y
+
+    if ! fc-list | grep -qi "JetBrainsMono Nerd Font"; then
+      print_header "Install Nerd Font"
+      mkdir -p "$HOME/.local/share/fonts"
+      curl -Lo /tmp/JetBrainsMono.tar.xz \
+        "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
+      tar xf /tmp/JetBrainsMono.tar.xz -C "$HOME/.local/share/fonts"
+      rm /tmp/JetBrainsMono.tar.xz
+      fc-cache -fv
+    fi
     ;;
 
   proxmox)
@@ -114,6 +129,16 @@ case "$PLATFORM" in
 
     print_header "Update starship"
     curl -sS https://starship.rs/install.sh | sh -s -- -y
+
+    if ! fc-list | grep -qi "JetBrainsMono Nerd Font"; then
+      print_header "Install Nerd Font"
+      mkdir -p "$HOME/.local/share/fonts"
+      curl -Lo /tmp/JetBrainsMono.tar.xz \
+        "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
+      tar xf /tmp/JetBrainsMono.tar.xz -C "$HOME/.local/share/fonts"
+      rm /tmp/JetBrainsMono.tar.xz
+      fc-cache -fv
+    fi
     ;;
 
   *)

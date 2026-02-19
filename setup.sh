@@ -223,6 +223,24 @@ setup_mac() {
     neovim \
     lazygit \
     starship
+
+  brew install --cask font-jetbrains-mono-nerd-font
+}
+
+# --- nerd font install (linux) ---
+
+install_nerd_font() {
+  local home_dir="$1"
+  local run_cmd="$2"
+
+  print_header "Install Nerd Font"
+
+  $run_cmd mkdir -p "$home_dir/.local/share/fonts"
+  curl -Lo /tmp/JetBrainsMono.tar.xz \
+    "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
+  $run_cmd tar xf /tmp/JetBrainsMono.tar.xz -C "$home_dir/.local/share/fonts"
+  rm /tmp/JetBrainsMono.tar.xz
+  fc-cache -fv
 }
 
 # --- shared functions ---
@@ -292,6 +310,7 @@ case "$PLATFORM" in
     install_docker
     harden_vps
     usermod -aG docker "$USERNAME"
+    install_nerd_font "/home/$USERNAME" "sudo -u $USERNAME"
     reset_shell "/home/$USERNAME"
     setup_zsh_plugins "/home/$USERNAME" "sudo -u $USERNAME"
     clone_dotfiles "/home/$USERNAME" "sudo -u $USERNAME"
@@ -304,6 +323,7 @@ case "$PLATFORM" in
 
   proxmox)
     install_linux_packages ""
+    install_nerd_font "/root" ""
     reset_shell "/root"
     setup_zsh_plugins "/root" ""
     clone_dotfiles "/root" ""
@@ -316,6 +336,7 @@ case "$PLATFORM" in
 
   workstation)
     install_linux_packages "sudo"
+    install_nerd_font "$HOME" ""
     reset_shell "$HOME"
     setup_zsh_plugins "$HOME" ""
     clone_dotfiles "$HOME" ""

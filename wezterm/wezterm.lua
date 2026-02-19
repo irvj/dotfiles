@@ -1,7 +1,7 @@
 local wezterm = require 'wezterm'
 local config = wezterm.config_builder()
 
-config.font = wezterm.font 'MesloLGS Nerd Font'
+config.font = wezterm.font 'JetBrainsMono Nerd Font'
 config.font_size = 14.0
 config.color_scheme = 'Nord (Gogh)'
 config.default_prog = { 'wsl.exe', '-d', 'jdev' }
