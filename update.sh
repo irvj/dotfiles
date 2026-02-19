@@ -108,9 +108,16 @@ case "$PLATFORM" in
     fi
 
     print_header "Update starship"
-    if ! curl -sS https://starship.rs/install.sh | sudo sh -s -- -y > /dev/null; then
-      echo "Error: starship install failed"
-      exit 1
+    STARSHIP_LATEST=$(curl -s "https://api.github.com/repos/starship/starship/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+    STARSHIP_CURRENT=$(starship --version 2>/dev/null | head -1 | grep -Po 'starship \K\S+' || echo "none")
+    if [[ "$STARSHIP_CURRENT" != "$STARSHIP_LATEST" ]]; then
+      echo "Updating starship v$STARSHIP_CURRENT -> v$STARSHIP_LATEST"
+      if ! curl -sS https://starship.rs/install.sh | sudo sh -s -- -y > /dev/null; then
+        echo "Error: starship install failed"
+        exit 1
+      fi
+    else
+      echo "starship is already up to date (v$STARSHIP_CURRENT)"
     fi
 
     if ! fc-list | grep -qi "JetBrainsMono Nerd Font"; then
@@ -157,9 +164,16 @@ case "$PLATFORM" in
     fi
 
     print_header "Update starship"
-    if ! curl -sS https://starship.rs/install.sh | sh -s -- -y > /dev/null; then
-      echo "Error: starship install failed"
-      exit 1
+    STARSHIP_LATEST=$(curl -s "https://api.github.com/repos/starship/starship/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+    STARSHIP_CURRENT=$(starship --version 2>/dev/null | head -1 | grep -Po 'starship \K\S+' || echo "none")
+    if [[ "$STARSHIP_CURRENT" != "$STARSHIP_LATEST" ]]; then
+      echo "Updating starship v$STARSHIP_CURRENT -> v$STARSHIP_LATEST"
+      if ! curl -sS https://starship.rs/install.sh | sh -s -- -y > /dev/null; then
+        echo "Error: starship install failed"
+        exit 1
+      fi
+    else
+      echo "starship is already up to date (v$STARSHIP_CURRENT)"
     fi
 
     if ! fc-list | grep -qi "JetBrainsMono Nerd Font"; then
