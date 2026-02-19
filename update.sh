@@ -104,7 +104,7 @@ case "$PLATFORM" in
 
   vps|workstation)
     KERNEL_BEFORE=$(uname -r)
-    if ! APT_OUTPUT=$(sudo apt update && sudo apt upgrade -y 2>&1); then
+    if ! APT_OUTPUT=$(sudo apt-get update && sudo apt-get upgrade -y 2>&1); then
       error "system package update failed"
       echo "$APT_OUTPUT"
       exit 1
@@ -168,7 +168,7 @@ case "$PLATFORM" in
     ;;
 
   proxmox)
-    if ! APT_OUTPUT=$(apt update && apt upgrade -y 2>&1); then
+    if ! APT_OUTPUT=$(apt-get update && apt-get upgrade -y 2>&1); then
       error "system package update failed"
       echo "$APT_OUTPUT"
       exit 1
