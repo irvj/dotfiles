@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Personal dotfiles and machine setup for macOS and Linux. One curl command provisions a full terminal environment with a consistent Nord theme across all tools.
+Personal dotfiles and machine setup for macOS and Linux. One curl command provisions a full terminal environment with a consistent Liminal Salt theme across all tools.
 
 ## Repository structure
 
@@ -10,15 +10,18 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 ├── update.sh                 # Updates everything (run via `dotup` alias)
 ├── .gitignore                # Ignores .platform marker file
 ├── zshrc                     # Zsh config (aliases, plugins, prompt)
-├── tmux.conf                 # Tmux config (prefix Ctrl-A, vim nav, Nord status bar)
+├── tmux.conf                 # Tmux config (prefix Ctrl-A, vim nav, Liminal Salt status bar)
 ├── gitconfig                 # Git config (aliases, rebase pull, includes local identity)
-├── starship.toml             # Starship prompt (powerline segments, Nord palette)
-├── ghostty/config            # Ghostty terminal (Nord theme, JetBrains Mono Nerd Font)
-├── wezterm/wezterm.lua       # WezTerm terminal (Nord theme, JetBrains Mono Nerd Font, Windows)
-├── zed/settings.json         # Zed editor (Nord theme, MesloLGS Nerd Font)
-└── nvim/lua/plugins/         # LazyVim plugin overrides (symlinked into ~/.config/nvim)
-    ├── colorscheme.lua       #   Nord colorscheme via gbprod/nord.nvim
-    └── gitsigns.lua          #   Inline git blame on current line
+├── starship.toml             # Starship prompt (powerline segments, Liminal Salt palette)
+├── ghostty/config            # Ghostty terminal (Liminal Salt theme, JetBrains Mono Nerd Font)
+├── wezterm/wezterm.lua       # WezTerm terminal (Liminal Salt theme, JetBrains Mono Nerd Font, Windows)
+├── zed/settings.json         # Zed editor (Liminal Salt theme, MesloLGS Nerd Font)
+├── zed/liminal-salt.json     # Liminal Salt theme for Zed (symlinked into ~/.config/zed/themes)
+└── nvim/                     # LazyVim overrides (symlinked into ~/.config/nvim)
+    ├── colors/liminal-salt-dark.vim  # Liminal Salt colorscheme for Neovim
+    └── lua/plugins/
+        ├── colorscheme.lua   #   Sets Liminal Salt as LazyVim colorscheme
+        └── gitsigns.lua      #   Inline git blame on current line
 ```
 
 ## How setup works
@@ -54,8 +57,9 @@ Creates symlinks from `~/.dotfiles/` into the home directory:
 - `starship.toml` → `~/.config/starship.toml`
 - `ghostty/` → `~/.config/ghostty` (directory symlink, uses `ln -sfn`)
 - `zed/settings.json` → `~/.config/zed/settings.json`
+- `zed/liminal-salt.json` → `~/.config/zed/themes/liminal-salt.json`
 
-Clones the LazyVim starter to `~/.config/nvim` if it doesn't exist (first install only), then symlinks all `nvim/lua/plugins/*.lua` files into the LazyVim plugins directory.
+Clones the LazyVim starter to `~/.config/nvim` if it doesn't exist (first install only), then symlinks all `nvim/colors/*.vim` files into the Neovim colors directory and all `nvim/lua/plugins/*.lua` files into the LazyVim plugins directory.
 
 ## How update works
 
@@ -85,7 +89,7 @@ Steps:
 
 ## Key conventions
 
-- **Nord everywhere**: Starship, tmux, Ghostty, Zed, and Neovim all use the Nord palette.
+- **Liminal Salt everywhere**: Starship, tmux, Ghostty, Zed, and Neovim all use the Liminal Salt palette.
 - **Font**: JetBrains Mono Nerd Font across Ghostty and WezTerm (provides powerline glyphs, icons, and coding ligatures). Installed automatically by `setup.sh` and verified by `update.sh`.
 - **Symlinks, not copies**: All configs are symlinked so `git pull` in `~/.dotfiles` immediately updates the live config.
 - **Directory symlinks use `ln -sfn`**: Prevents `ln -sf` from creating a nested symlink inside the target on re-runs (e.g. ghostty).

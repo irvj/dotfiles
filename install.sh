@@ -14,8 +14,9 @@ ln -sf $DOTFILES/tmux.conf ~/.tmux.conf
 ln -sf $DOTFILES/gitconfig ~/.gitconfig
 ln -sf $DOTFILES/starship.toml ~/.config/starship.toml
 ln -sfn $DOTFILES/ghostty ~/.config/ghostty
-mkdir -p ~/.config/zed
+mkdir -p ~/.config/zed/themes
 ln -sf $DOTFILES/zed/settings.json ~/.config/zed/settings.json
+ln -sf $DOTFILES/zed/liminal-salt.json ~/.config/zed/themes/liminal-salt.json
 
 # --- install lazyvim ---
 
@@ -28,6 +29,13 @@ else
 fi
 
 # --- symlink nvim plugin configs ---
+
+# --- symlink nvim colors ---
+
+mkdir -p ~/.config/nvim/colors
+for f in $DOTFILES/nvim/colors/*.vim; do
+  ln -sf "$f" ~/.config/nvim/colors/$(basename "$f")
+done
 
 for f in $DOTFILES/nvim/lua/plugins/*.lua; do
   ln -sf "$f" ~/.config/nvim/lua/plugins/$(basename "$f")

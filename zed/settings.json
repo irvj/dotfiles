@@ -35,8 +35,8 @@
   "buffer_font_size": 14,
   "theme": {
     "mode": "system",
-    "light": "Nord Light",
-    "dark": "Nord"
+    "light": "Liminal Salt Light",
+    "dark": "Liminal Salt Dark"
   },
   "minimap": {
     "show": "always",

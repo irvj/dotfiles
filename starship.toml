@@ -31,7 +31,7 @@ $cmd_duration\
 $line_break\
 $character"""
 
-palette = 'nord'
+palette = 'liminal_salt'
 
 [os]
 disabled = false
@@ -174,16 +174,16 @@ disabled = false
 show_notifications = true
 min_time_to_notify = 45000
 
-[palettes.nord]
-crust = "#2e3440"
-dark_gray = "#3b4252"
-gray = "#434c5e"
-light_gray = "#4c566a"
-dim_white = "#d8dee9"
-white = "#eceff4"
-teal = "#8fbcbb"
-cyan = "#88c0d0"
-blue = "#81a1c1"
-dark_blue = "#5e81ac"
-red = "#bf616a"
-green = "#a3be8c"
+[palettes.liminal_salt]
+crust = "#1a1c1b"
+dark_gray = "#242726"
+gray = "#2e312f"
+light_gray = "#3d4741"
+dim_white = "#c5c1b8"
+white = "#e8e4dc"
+teal = "#8fb8ad"
+cyan = "#95bebe"
+blue = "#8fac98"
+dark_blue = "#506e58"
+red = "#cc8585"
+green = "#7dba8a"

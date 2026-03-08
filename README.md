@@ -1,6 +1,6 @@
 # dotfiles
 
-Personal dotfiles and machine setup scripts for macOS and Linux. One curl command sets up a full terminal environment: zsh with [Starship](https://starship.rs) prompt (powerline display, Nord palette), tmux, neovim with [LazyVim](https://www.lazyvim.org), lazygit, and a curated set of CLI tools.
+Personal dotfiles and machine setup scripts for macOS and Linux. One curl command sets up a full terminal environment: zsh with [Starship](https://starship.rs) prompt (powerline display, [Liminal Salt](https://github.com/irvj/liminal-salt) palette), tmux, neovim with [LazyVim](https://www.lazyvim.org), lazygit, and a curated set of CLI tools.
 
 ## Routes
 
@@ -79,13 +79,13 @@ curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash 
 
 ### `windows` (WezTerm only)
 
-No setup script for Windows. To get the Nord-themed [WezTerm](https://wezfurlong.org/wezterm/) config, run this one-liner in PowerShell:
+No setup script for Windows. To get the Liminal Salt-themed [WezTerm](https://wezfurlong.org/wezterm/) config, run this one-liner in PowerShell:
 
 ```powershell
 curl.exe -o $HOME/.wezterm.lua https://raw.githubusercontent.com/irvj/dotfiles/main/wezterm/wezterm.lua
 ```
 
-This places the config at `~/.wezterm.lua` where WezTerm automatically picks it up. Sets JetBrains Mono Nerd Font at size 14 with the Nord color scheme. The font must be installed manually on Windows.
+This places the config at `~/.wezterm.lua` where WezTerm automatically picks it up. Sets JetBrains Mono Nerd Font at size 14 with the Liminal Salt color scheme. The font must be installed manually on Windows.
 
 ## Updating
 
