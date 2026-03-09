@@ -100,11 +100,10 @@ hi @tag.attribute guifg=#c9a86c guibg=NONE
 hi @string.regex guifg=#a9ad78 guibg=NONE
 hi @string.escape guifg=#c9956c guibg=NONE
 
-" Neo-tree (sidebar panels use surface-secondary)
-hi NeoTreeNormal guifg=#e8e4dc guibg=#141615
-hi NeoTreeNormalNC guifg=#9e9b93 guibg=#141615
-hi NeoTreeWinSeparator guifg=#2e312f guibg=#141615
-hi NeoTreeEndOfBuffer guifg=#141615 guibg=#141615
+" Sidebar panels (surface-secondary)
+hi SnacksPickerListNormal guifg=#e8e4dc guibg=#141615
+hi SnacksPickerInputNormal guifg=#e8e4dc guibg=#141615
+hi SnacksPickerInputBorder guifg=#2e312f guibg=#141615
 
 " Git signs
 hi GitSignsAdd guifg=#7dba8a guibg=NONE
