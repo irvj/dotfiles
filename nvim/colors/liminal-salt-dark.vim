@@ -101,9 +101,11 @@ hi @string.regex guifg=#a9ad78 guibg=NONE
 hi @string.escape guifg=#c9956c guibg=NONE
 
 " Sidebar panels (surface-secondary)
-hi SnacksPickerListNormal guifg=#e8e4dc guibg=#141615
-hi SnacksPickerInputNormal guifg=#e8e4dc guibg=#141615
+hi SnacksPickerList guifg=#e8e4dc guibg=#141615
+hi SnacksPickerInput guifg=#e8e4dc guibg=#141615
 hi SnacksPickerInputBorder guifg=#2e312f guibg=#141615
+hi SnacksPickerBox guifg=#e8e4dc guibg=#141615
+hi SnacksPickerBoxBorder guifg=#2e312f guibg=#141615
 
 " Git signs
 hi GitSignsAdd guifg=#7dba8a guibg=NONE
