@@ -28,13 +28,18 @@ else
   echo "dotfiles installed."
 fi
 
-# --- symlink nvim plugin configs ---
-
-# --- symlink nvim colors ---
+# --- symlink nvim colorscheme and plugins ---
 
 mkdir -p ~/.config/nvim/colors
-for f in $DOTFILES/nvim/colors/*.vim; do
+for f in $DOTFILES/nvim/colors/*.lua; do
   ln -sf "$f" ~/.config/nvim/colors/$(basename "$f")
+done
+
+ln -sfn $DOTFILES/nvim/lua/liminal-salt ~/.config/nvim/lua/liminal-salt
+
+mkdir -p ~/.config/nvim/lua/lualine/themes
+for f in $DOTFILES/nvim/lua/lualine/themes/*.lua; do
+  ln -sf "$f" ~/.config/nvim/lua/lualine/themes/$(basename "$f")
 done
 
 for f in $DOTFILES/nvim/lua/plugins/*.lua; do
