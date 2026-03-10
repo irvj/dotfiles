@@ -5,9 +5,12 @@ DOTFILES="$HOME/.dotfiles"
 PLATFORM_FILE="$DOTFILES/.platform"
 RESET_PLATFORM=false
 
+SKIP_PULL=false
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -p|--platform) RESET_PLATFORM=true; shift ;;
+    --skip-pull) SKIP_PULL=true; shift ;;
     *) echo "Usage: $0 [-p|--platform]"; exit 1 ;;
   esac
 done
@@ -55,12 +58,20 @@ echo ""
 
 # --- pull latest dotfiles ---
 
-PULL_OUTPUT=$(git -C "$DOTFILES" pull 2>&1)
-if echo "$PULL_OUTPUT" | grep -q "Already up to date."; then
-  success "dotfiles up to date"
+if $SKIP_PULL; then
+  success "dotfiles updated"
 else
-  FILES_CHANGED=$(echo "$PULL_OUTPUT" | grep -oE '[0-9]+ files? changed' | grep -oE '[0-9]+' || echo "")
-  info "dotfiles updated ($FILES_CHANGED files changed)"
+  PULL_OUTPUT=$(git -C "$DOTFILES" pull 2>&1)
+  if echo "$PULL_OUTPUT" | grep -q "Already up to date."; then
+    success "dotfiles up to date"
+  else
+    FILES_CHANGED=$(echo "$PULL_OUTPUT" | grep -oE '[0-9]+ files? changed' | grep -oE '[0-9]+' || echo "")
+    info "dotfiles updated ($FILES_CHANGED files changed)"
+    # re-exec with the updated script if update.sh itself changed
+    if echo "$PULL_OUTPUT" | grep -q "update.sh"; then
+      exec "$DOTFILES/update.sh" --skip-pull "$@"
+    fi
+  fi
 fi
 
 # --- re-run install.sh ---
