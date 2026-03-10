@@ -157,6 +157,15 @@ case "$PLATFORM" in
       SUDO="sudo"
     fi
 
+    if ! command -v glow &>/dev/null; then
+      $SUDO mkdir -p /etc/apt/keyrings
+      curl -fsSL https://repo.charm.sh/apt/gpg.key | $SUDO gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+      echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | $SUDO tee /etc/apt/sources.list.d/charm.list > /dev/null
+      $SUDO apt-get update > /dev/null 2>&1
+      $SUDO apt-get install -y glow > /dev/null 2>&1
+      success "glow installed"
+    fi
+
     if ! APT_OUTPUT=$($SUDO apt-get update && $SUDO apt-get upgrade -y 2>&1); then
       error "system package update failed"
       echo "$APT_OUTPUT"
@@ -209,18 +218,6 @@ case "$PLATFORM" in
       success "starship v$STARSHIP_CURRENT"
     fi
 
-    GLOW_LATEST=$(curl -s "https://api.github.com/repos/charmbracelet/glow/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-    GLOW_CURRENT=$(glow --version 2>/dev/null | sed 's/glow version //' | sed 's/ .*//')
-    [[ -z "$GLOW_CURRENT" ]] && GLOW_CURRENT="none"
-    if [[ "$GLOW_CURRENT" != "$GLOW_LATEST" ]]; then
-      info "glow v$GLOW_CURRENT → v$GLOW_LATEST"
-      curl -sLo glow.tar.gz "https://github.com/charmbracelet/glow/releases/latest/download/glow_${GLOW_LATEST}_Linux_x86_64.tar.gz"
-      tar xf glow.tar.gz glow
-      $SUDO install glow /usr/local/bin
-      rm glow glow.tar.gz
-    else
-      success "glow v$GLOW_CURRENT"
-    fi
 
     if ! ls "$HOME/.local/share/fonts"/JetBrainsMonoNerd* &>/dev/null; then
       info "installing jetbrains mono nerd font..."

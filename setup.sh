@@ -142,12 +142,12 @@ install_linux_packages() {
   $pkg_cmd install lazygit /usr/local/bin
   rm lazygit lazygit.tar.gz
 
-  # install glow
-  GLOW_VERSION=$(curl -s "https://api.github.com/repos/charmbracelet/glow/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-  curl -Lo glow.tar.gz "https://github.com/charmbracelet/glow/releases/latest/download/glow_${GLOW_VERSION}_Linux_x86_64.tar.gz"
-  tar xf glow.tar.gz glow
-  $pkg_cmd install glow /usr/local/bin
-  rm glow glow.tar.gz
+  # install glow (via charm apt repo)
+  $pkg_cmd mkdir -p /etc/apt/keyrings
+  curl -fsSL https://repo.charm.sh/apt/gpg.key | $pkg_cmd gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+  echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | $pkg_cmd tee /etc/apt/sources.list.d/charm.list > /dev/null
+  $pkg_cmd apt update
+  $pkg_cmd apt install -y glow
 }
 
 # --- docker install ---
