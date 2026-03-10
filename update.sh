@@ -100,6 +100,7 @@ case "$PLATFORM" in
     NVIM_BEFORE=$(nvim --version 2>/dev/null | head -1 | sed 's/NVIM v//' || echo "none")
     LAZYGIT_BEFORE=$(lazygit --version 2>/dev/null | grep -oE 'version=[^,]+' | head -1 | sed 's/version=//' || echo "none")
     STARSHIP_BEFORE=$(starship --version 2>/dev/null | head -1 | sed 's/starship //' || echo "none")
+    GLOW_BEFORE=$(glow --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "none")
 
     brew update > /dev/null 2>&1
     if ! BREW_OUTPUT=$(HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade 2>&1); then
@@ -116,12 +117,14 @@ case "$PLATFORM" in
     NVIM_AFTER=$(nvim --version 2>/dev/null | head -1 | sed 's/NVIM v//' || echo "none")
     LAZYGIT_AFTER=$(lazygit --version 2>/dev/null | grep -oE 'version=[^,]+' | head -1 | sed 's/version=//' || echo "none")
     STARSHIP_AFTER=$(starship --version 2>/dev/null | head -1 | sed 's/starship //' || echo "none")
+    GLOW_AFTER=$(glow --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "none")
 
-    for tool in neovim lazygit starship; do
+    for tool in neovim lazygit starship glow; do
       case "$tool" in
         neovim)   BEFORE="$NVIM_BEFORE"; AFTER="$NVIM_AFTER" ;;
         lazygit)  BEFORE="$LAZYGIT_BEFORE"; AFTER="$LAZYGIT_AFTER" ;;
         starship) BEFORE="$STARSHIP_BEFORE"; AFTER="$STARSHIP_AFTER" ;;
+        glow)     BEFORE="$GLOW_BEFORE"; AFTER="$GLOW_AFTER" ;;
       esac
       if [[ "$BEFORE" != "$AFTER" ]]; then
         info "$tool v$BEFORE → v$AFTER"
@@ -196,6 +199,18 @@ case "$PLATFORM" in
       fi
     else
       success "starship v$STARSHIP_CURRENT"
+    fi
+
+    GLOW_LATEST=$(curl -s "https://api.github.com/repos/charmbracelet/glow/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+    GLOW_CURRENT=$(glow --version 2>/dev/null | grep -Po '[0-9]+\.[0-9]+\.[0-9]+' || echo "none")
+    if [[ "$GLOW_CURRENT" != "$GLOW_LATEST" ]]; then
+      info "glow v$GLOW_CURRENT → v$GLOW_LATEST"
+      curl -sLo glow.tar.gz "https://github.com/charmbracelet/glow/releases/latest/download/glow_${GLOW_LATEST}_Linux_x86_64.tar.gz"
+      tar xf glow.tar.gz glow
+      $SUDO install glow /usr/local/bin
+      rm glow glow.tar.gz
+    else
+      success "glow v$GLOW_CURRENT"
     fi
 
     if ! ls "$HOME/.local/share/fonts"/JetBrainsMonoNerd* &>/dev/null; then

@@ -141,6 +141,13 @@ install_linux_packages() {
   tar xf lazygit.tar.gz lazygit
   $pkg_cmd install lazygit /usr/local/bin
   rm lazygit lazygit.tar.gz
+
+  # install glow
+  GLOW_VERSION=$(curl -s "https://api.github.com/repos/charmbracelet/glow/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+  curl -Lo glow.tar.gz "https://github.com/charmbracelet/glow/releases/latest/download/glow_${GLOW_VERSION}_Linux_x86_64.tar.gz"
+  tar xf glow.tar.gz glow
+  $pkg_cmd install glow /usr/local/bin
+  rm glow glow.tar.gz
 }
 
 # --- docker install ---
@@ -223,7 +230,8 @@ setup_mac() {
     fzf \
     neovim \
     lazygit \
-    starship
+    starship \
+    glow
 
   brew install --cask font-jetbrains-mono-nerd-font
 }
