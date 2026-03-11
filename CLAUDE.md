@@ -36,7 +36,7 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 | `workstation` | normal user  | apt (with sudo) | no        | no           |
 
 Each platform case:
-1. Installs system packages and CLI tools (including fontconfig on Linux)
+1. Installs system packages and CLI tools (including fontconfig on Linux, glow via Charm apt repo on Linux, glow via Homebrew on Mac)
 2. Installs JetBrains Mono Nerd Font (Homebrew cask on mac, downloaded from Nerd Fonts GitHub releases on Linux to `~/.local/share/fonts/`)
 3. Optionally resets existing shell config (interactive prompt, skip with `-y`)
 4. Installs zsh plugins (zsh-autosuggestions, zsh-syntax-highlighting) to `~/.zsh/`
@@ -69,7 +69,7 @@ Output uses colored status indicators: green `✓` when up to date, yellow `→`
 
 Steps:
 1. Reads platform from `~/.dotfiles/.platform` (prompts interactively if missing or `--platform` flag passed)
-2. Pulls latest dotfiles via git
+2. Pulls latest dotfiles via git (if `update.sh` itself changed, re-execs the new version with `--skip-pull` to avoid a redundant pull)
 3. Re-runs `install.sh` (re-symlinks everything)
 4. Syncs LazyVim plugins headlessly (`nvim --headless "+Lazy! sync" +qa`)
 5. Updates zsh plugins (git pull in each `~/.zsh/*/` directory)
@@ -78,6 +78,7 @@ Steps:
 **Mac:**
 - Runs `brew update && brew upgrade` (output suppressed)
 - Shows before/after version comparison for neovim, lazygit, and starship
+- Installs glow via Homebrew if missing
 - Installs JetBrains Mono Nerd Font cask if missing
 
 **Linux (vps/workstation/proxmox):**
@@ -85,6 +86,7 @@ Steps:
 - Runs `apt-get update && apt-get upgrade` (output suppressed, shown on failure)
 - Detects kernel updates (`linux-image` or `pve-kernel`) and recommends reboot
 - Checks neovim, lazygit, and starship versions against latest GitHub releases; only downloads when a new version is available
+- Adds the Charm apt repo and installs glow if missing (updated automatically via `apt-get upgrade`)
 - Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/` if missing (checks for font files directly, no dependency on fontconfig)
 
 ## Key conventions

@@ -1,6 +1,6 @@
 # dotfiles
 
-Personal dotfiles and machine setup scripts for macOS and Linux. One curl command sets up a full terminal environment: zsh with [Starship](https://starship.rs) prompt (powerline display, [Liminal Salt](https://github.com/irvj/liminal-salt) palette), tmux, neovim with [LazyVim](https://www.lazyvim.org), lazygit, and a curated set of CLI tools.
+Personal dotfiles and machine setup scripts for macOS and Linux. One curl command sets up a full terminal environment: zsh with [Starship](https://starship.rs) prompt (powerline display, [Liminal Salt](https://github.com/irvj/liminal-salt) palette), tmux, neovim with [LazyVim](https://www.lazyvim.org), lazygit, [glow](https://github.com/charmbracelet/glow), and a curated set of CLI tools.
 
 ## Routes
 
@@ -9,7 +9,7 @@ Personal dotfiles and machine setup scripts for macOS and Linux. One curl comman
 Run as: **current user**
 
 - Installs [Homebrew](https://brew.sh) if not already present
-- Installs packages via Homebrew: git, curl, wget, tmux, zsh, htop, ripgrep, fd, fzf, neovim, lazygit, starship
+- Installs packages via Homebrew: git, curl, wget, tmux, zsh, htop, ripgrep, fd, fzf, neovim, lazygit, starship, [glow](https://github.com/charmbracelet/glow)
 - Installs JetBrains Mono Nerd Font via Homebrew cask
 - Symlinks dotfiles (`zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`, `zed/settings.json`)
 - Installs [LazyVim](https://www.lazyvim.org) (neovim config)
@@ -23,7 +23,7 @@ curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash 
 
 Run as: **root**
 
-- Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fontconfig, fzf, starship, neovim, lazygit
+- Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fontconfig, fzf, starship, neovim, lazygit, [glow](https://github.com/charmbracelet/glow) (via [Charm apt repo](https://repo.charm.sh))
 - Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/`
 - Installs [Docker Engine](https://docs.docker.com/engine/install/ubuntu/) (CE, CLI, containerd, Buildx, Compose plugin)
 - Installs ufw and sudo
@@ -45,7 +45,7 @@ curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash 
 
 Run as: **root**
 
-- Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fontconfig, fzf, starship, neovim, lazygit
+- Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fontconfig, fzf, starship, neovim, lazygit, [glow](https://github.com/charmbracelet/glow) (via [Charm apt repo](https://repo.charm.sh))
 - Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/`
 - Symlinks dotfiles (`zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`) for root
 - Installs [LazyVim](https://www.lazyvim.org) (neovim config) for root
@@ -64,7 +64,7 @@ curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash 
 
 Run as: **normal user** (uses sudo for package installation)
 
-- Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fontconfig, fzf, starship, neovim, lazygit
+- Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fontconfig, fzf, starship, neovim, lazygit, [glow](https://github.com/charmbracelet/glow) (via [Charm apt repo](https://repo.charm.sh))
 - Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/`
 - Symlinks dotfiles (`zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`, `zed/settings.json`)
 - Installs [LazyVim](https://www.lazyvim.org) (neovim config)
@@ -96,6 +96,7 @@ After initial setup, run `dotup` from any shell to update everything:
 - Updates zsh plugins
 - Upgrades system packages (Homebrew on mac, apt on Linux)
 - Checks neovim, lazygit, and starship versions — only downloads when a newer version is available
+- Installs glow if missing (Homebrew on Mac, Charm apt repo on Linux)
 - Installs JetBrains Mono Nerd Font if missing
 - Detects kernel updates on Linux and recommends reboot
 
