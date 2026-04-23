@@ -1,1 +1,1 @@
-require("liminal-salt").load()
+require("liminal-salt").load("dark")

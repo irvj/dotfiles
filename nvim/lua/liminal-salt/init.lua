@@ -3,7 +3,9 @@
 
 local M = {}
 
-function M.load()
+function M.load(mode)
+  mode = mode or "dark"
+
   if vim.g.colors_name then
     vim.cmd("hi clear")
   end
@@ -12,8 +14,8 @@ function M.load()
   end
 
   vim.o.termguicolors = true
-  vim.o.background = "dark"
-  vim.g.colors_name = "liminal-salt-dark"
+  vim.o.background = mode
+  vim.g.colors_name = "liminal-salt-" .. mode
 
   -- Collect all highlight groups
   local groups = {}
@@ -27,7 +29,7 @@ function M.load()
   }
 
   for _, mod in ipairs(modules) do
-    for name, hl in pairs(mod.highlights()) do
+    for name, hl in pairs(mod.highlights(mode)) do
       groups[name] = hl
     end
   end
@@ -38,7 +40,7 @@ function M.load()
   end
 
   -- Apply terminal colors
-  require("liminal-salt.terminal").apply()
+  require("liminal-salt.terminal").apply(mode)
 end
 
 return M

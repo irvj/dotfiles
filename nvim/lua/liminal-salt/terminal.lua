@@ -3,23 +3,26 @@ local p = require("liminal-salt.palette").p
 
 local M = {}
 
-function M.apply()
-  vim.g.terminal_color_0  = p.stone300
-  vim.g.terminal_color_1  = p.red400
-  vim.g.terminal_color_2  = p.sage500
-  vim.g.terminal_color_3  = p.amber400
-  vim.g.terminal_color_4  = p.blue400
-  vim.g.terminal_color_5  = p.orange400
-  vim.g.terminal_color_6  = p.teal400
-  vim.g.terminal_color_7  = p.beige500
-  vim.g.terminal_color_8  = p.sage600
-  vim.g.terminal_color_9  = p.red300
-  vim.g.terminal_color_10 = p.sage300
-  vim.g.terminal_color_11 = p.amber400
-  vim.g.terminal_color_12 = p.blue400
-  vim.g.terminal_color_13 = p.orange400
-  vim.g.terminal_color_14 = p.teal400
-  vim.g.terminal_color_15 = p.beige300
+local colors = {
+  dark = {
+    p.stone300, p.red400, p.sage500, p.amber400,
+    p.blue400, p.orange400, p.teal400, p.beige500,
+    p.sage600, p.red300, p.sage300, p.amber400,
+    p.blue400, p.orange400, p.teal400, p.beige300,
+  },
+  light = {
+    p.beige950, p.red600, p.sage900, p.amber700,
+    p.blue700, p.orange700, p.teal700, p.beige200,
+    p.beige800, p.red700, p.sage800, p.amber700,
+    p.blue700, p.orange700, p.teal700, p.beige100,
+  },
+}
+
+function M.apply(mode)
+  local c = colors[mode] or colors.dark
+  for i = 0, 15 do
+    vim.g["terminal_color_" .. i] = c[i + 1]
+  end
 end
 
 return M

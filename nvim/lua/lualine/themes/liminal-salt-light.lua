@@ -1,17 +1,17 @@
--- Liminal Salt Dark — lualine theme
+-- Liminal Salt Light — lualine theme
 -- Colors from canonical theme: github.com/irvj/liminal-salt
 
 local p = {
-  accent  = "#8fac98",
-  insert  = "#95bebe",
-  visual  = "#c9a86c",
-  replace = "#cc8585",
-  command = "#8fb8ad",
-  fg      = "#e8e4dc",
-  fgMuted = "#9e9b93",
-  bgMain  = "#1a1c1b",
-  bgChrome = "#242726",
-  bgSep   = "#2e312f",
+  accent  = "#506e58",
+  insert  = "#3e5d5d",
+  visual  = "#7d6325",
+  replace = "#a54d4d",
+  command = "#3e6b5d",
+  fg      = "#2d2b28",
+  fgMuted = "#6b6762",
+  bgMain  = "#f5f2ed",
+  bgChrome = "#fdfcfa",
+  bgSep   = "#ddd8d0",
 }
 
 return {
