@@ -93,6 +93,9 @@ Steps:
 - Adds the Charm apt repo and installs glow if missing (updated automatically via `apt-get upgrade`)
 - Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/` if missing (checks for font files directly, no dependency on fontconfig)
 
+**Cross-platform (runs after the platform block):**
+- If `rustup` is on PATH, ensures the `rust-analyzer` component is installed (required by LazyVim's Rust extra; the cargo shim at `~/.cargo/bin/rust-analyzer` errors without it). No-op when rustup isn't installed.
+
 ## Key conventions
 
 - **Liminal Salt everywhere**: Starship, tmux, Ghostty, Zed, and Neovim all use the Liminal Salt palette.

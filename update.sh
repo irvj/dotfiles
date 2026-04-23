@@ -242,5 +242,21 @@ case "$PLATFORM" in
     ;;
 esac
 
+# --- rust toolchain ---
+
+if command -v rustup &>/dev/null; then
+  if rustup component list --installed 2>/dev/null | grep -q "^rust-analyzer"; then
+    success "rust-analyzer installed"
+  else
+    info "installing rust-analyzer component"
+    if ! RUSTUP_OUTPUT=$(rustup component add rust-analyzer 2>&1); then
+      error "rust-analyzer install failed"
+      echo "$RUSTUP_OUTPUT"
+      exit 1
+    fi
+    success "rust-analyzer installed"
+  fi
+fi
+
 echo ""
 success "update complete"
