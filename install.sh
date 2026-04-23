@@ -36,6 +36,7 @@ for f in $DOTFILES/nvim/colors/*.lua; do
 done
 
 ln -sfn $DOTFILES/nvim/lua/liminal-salt ~/.config/nvim/lua/liminal-salt
+ln -sf $DOTFILES/nvim/markdownlint-cli2.yaml ~/.config/nvim/markdownlint-cli2.yaml
 
 mkdir -p ~/.config/nvim/lua/lualine/themes
 for f in $DOTFILES/nvim/lua/lualine/themes/*.lua; do
