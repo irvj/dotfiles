@@ -1,3 +1,5 @@
+vim.g.lazyvim_check_order = false
+
 return {
   { import = "lazyvim.plugins.extras.lang.rust" },
   { import = "lazyvim.plugins.extras.lang.php" },
