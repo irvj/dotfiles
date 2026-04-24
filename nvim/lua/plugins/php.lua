@@ -14,4 +14,23 @@ return {
       end, opts.ensure_installed or {})
     end,
   },
+  {
+    "mfussenegger/nvim-lint",
+    optional = true,
+    opts = {
+      linters = {
+        phpcs = {
+          args = {
+            "--exclude=Generic.Files.LineLength,Generic.WhiteSpace.DisallowTabIndent",
+            "-q",
+            "--report=json",
+            function()
+              return "--stdin-path=" .. vim.fn.expand("%:p:.")
+            end,
+            "-",
+          },
+        },
+      },
+    },
+  },
 }
