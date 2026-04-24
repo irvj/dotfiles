@@ -9,7 +9,7 @@ return {
     config = function(_, opts)
       require("gitsigns").setup(opts)
 
-      vim.api.nvim_create_autocmd("FocusGained", {
+      vim.api.nvim_create_autocmd({ "FocusGained", "TermClose" }, {
         group = vim.api.nvim_create_augroup("gitsigns_refresh", { clear = true }),
         callback = function()
           vim.defer_fn(function()
