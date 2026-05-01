@@ -15,6 +15,7 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 ├── starship.toml             # Starship prompt (powerline segments, Liminal Salt palette)
 ├── ghostty/config            # Ghostty terminal (Liminal Salt theme, JetBrains Mono Nerd Font)
 ├── wezterm/wezterm.lua       # WezTerm terminal (Liminal Salt theme, JetBrains Mono Nerd Font, Windows)
+├── alacritty/alacritty.toml  # Alacritty terminal (Liminal Salt theme, JetBrains Mono Nerd Font, Windows)
 ├── zed/settings.json         # Zed editor (Liminal Salt theme, MesloLGS Nerd Font)
 ├── zed/liminal-salt.json     # Liminal Salt theme for Zed (symlinked into ~/.config/zed/themes)
 └── nvim/                     # LazyVim overrides (symlinked into ~/.config/nvim)
@@ -108,6 +109,7 @@ Steps:
 - **`.platform` file**: Written by `setup.sh`, read by `update.sh`, listed in `.gitignore`. If missing, `update.sh` prompts the user to select their platform. Can be re-selected with `dotup -p`.
 - **Local git identity**: `gitconfig` includes `~/.gitconfig.local` for machine-specific `[user]` name/email (not tracked in the repo).
 - **Windows (WezTerm)**: No setup script for Windows. Download the WezTerm config with a one-liner: `curl.exe -o $HOME/.wezterm.lua https://raw.githubusercontent.com/irvj/dotfiles/main/wezterm/wezterm.lua`. Font must be installed manually on Windows.
+- **Windows (Alacritty)**: No setup script for Windows. Download the Alacritty config with a one-liner: `curl.exe --create-dirs -o $env:APPDATA\alacritty\alacritty.toml https://raw.githubusercontent.com/irvj/dotfiles/main/alacritty/alacritty.toml`. Font must be installed manually on Windows.
 
 ## Zsh aliases
 
