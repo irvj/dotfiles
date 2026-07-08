@@ -23,7 +23,7 @@ curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash 
 
 Run as: **root**
 
-- Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fontconfig, fzf, starship, neovim, lazygit, [glow](https://github.com/charmbracelet/glow) (via [Charm apt repo](https://repo.charm.sh))
+- Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fontconfig, fzf, python3-venv, python3-pip, xsel, starship, neovim, lazygit, [glow](https://github.com/charmbracelet/glow) (via [Charm apt repo](https://repo.charm.sh))
 - Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/`
 - Installs [Docker Engine](https://docs.docker.com/engine/install/ubuntu/) (CE, CLI, containerd, Buildx, Compose plugin)
 - Installs ufw and sudo
@@ -45,7 +45,7 @@ curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash 
 
 Run as: **root**
 
-- Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fontconfig, fzf, starship, neovim, lazygit, [glow](https://github.com/charmbracelet/glow) (via [Charm apt repo](https://repo.charm.sh))
+- Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fontconfig, fzf, python3-venv, python3-pip, xsel, starship, neovim, lazygit, [glow](https://github.com/charmbracelet/glow) (via [Charm apt repo](https://repo.charm.sh))
 - Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/`
 - Symlinks dotfiles (`zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`) for root
 - Installs [LazyVim](https://www.lazyvim.org) (neovim config) for root
@@ -64,7 +64,7 @@ curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash 
 
 Run as: **normal user** (uses sudo for package installation)
 
-- Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fontconfig, fzf, starship, neovim, lazygit, [glow](https://github.com/charmbracelet/glow) (via [Charm apt repo](https://repo.charm.sh))
+- Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fontconfig, fzf, python3-venv, python3-pip, xsel, starship, neovim, lazygit, [glow](https://github.com/charmbracelet/glow) (via [Charm apt repo](https://repo.charm.sh))
 - Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/`
 - Symlinks dotfiles (`zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`, `zed/settings.json`)
 - Installs [LazyVim](https://www.lazyvim.org) (neovim config)
@@ -118,6 +118,7 @@ Use `dotup -p` or `dotup --platform` to re-select your platform.
 - [LazyVim](https://www.lazyvim.org) (neovim config)
 - JetBrains Mono Nerd Font (powerline glyphs, icons, coding ligatures)
 - Zsh plugins: [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions), [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
+- System-clipboard yank from Neovim (`<leader>y` / `<leader>Y`): OSC 52 forwarded by tmux over SSH, `xsel` on desktop/WSL
 - Sets zsh as default shell
 
 ## Options

@@ -10,7 +10,7 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 ├── update.sh                 # Updates everything (run via `dotup` alias)
 ├── .gitignore                # Ignores .platform marker file
 ├── zshrc                     # Zsh config (aliases, plugins, prompt)
-├── tmux.conf                 # Tmux config (prefix Ctrl-A, vim nav, Liminal Salt status bar)
+├── tmux.conf                 # Tmux config (prefix Ctrl-A, vim nav, Liminal Salt status bar, OSC 52 clipboard)
 ├── gitconfig                 # Git config (aliases, rebase pull, includes local identity)
 ├── starship.toml             # Starship prompt (powerline segments, Liminal Salt palette)
 ├── ghostty/config            # Ghostty terminal (Liminal Salt theme, JetBrains Mono Nerd Font)
@@ -28,7 +28,11 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
     └── lua/plugins/
         ├── colorscheme.lua   #   Sets liminal-salt-dark as LazyVim colorscheme
         ├── gitsigns.lua      #   Inline git blame on current line
-        └── markdown.lua      #   Points markdownlint-cli2 at nvim/markdownlint-cli2.yaml
+        ├── markdown.lua      #   Points markdownlint-cli2 at nvim/markdownlint-cli2.yaml
+        ├── langs.lua         #   Imports LazyVim language extras (rust, php, ts, python, …)
+        ├── php.lua           #   Quiets phpactor/phpcs PHP diagnostics (see PHP LSP note)
+        ├── clipboard.lua     #   <leader>y / <leader>Y yank to the system clipboard
+        └── snacks.lua        #   Snacks picker: pass ripgrep --no-messages
 ```
 
 ## How setup works
@@ -43,7 +47,7 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 | `workstation` | normal user  | apt (with sudo) | no        | no           |
 
 Each platform case:
-1. Installs system packages and CLI tools (including fontconfig on Linux, glow via Charm apt repo on Linux, glow via Homebrew on Mac)
+1. Installs system packages and CLI tools (on Linux: fontconfig; `python3-venv`/`python3-pip` for Mason's pip-based tools like ruff; `xsel` as the system-clipboard provider; glow via Charm apt repo. On Mac: glow via Homebrew)
 2. Installs JetBrains Mono Nerd Font (Homebrew cask on mac, downloaded from Nerd Fonts GitHub releases on Linux to `~/.local/share/fonts/`)
 3. Optionally resets existing shell config (interactive prompt, skip with `-y`)
 4. Installs zsh plugins (zsh-autosuggestions, zsh-syntax-highlighting) to `~/.zsh/`
@@ -97,7 +101,7 @@ Steps:
 - Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/` if missing (checks for font files directly, no dependency on fontconfig)
 
 **Cross-platform (runs after the platform block):**
-- If `rustup` is on PATH, ensures the `rust-analyzer` component is installed (required by LazyVim's Rust extra; the cargo shim at `~/.cargo/bin/rust-analyzer` errors without it). No-op when rustup isn't installed.
+- If `rustup` is on PATH, ensures the `rust-analyzer` component is installed (required by LazyVim's Rust extra; the cargo shim at `~/.cargo/bin/rust-analyzer` errors without it). Silent when already present — only reports when it installs the component or fails. No-op when rustup isn't installed.
 
 ## Key conventions
 
@@ -106,6 +110,8 @@ Steps:
 - **Symlinks, not copies**: All configs are symlinked so `git pull` in `~/.dotfiles` immediately updates the live config.
 - **Directory symlinks use `ln -sfn`**: Prevents `ln -sf` from creating a nested symlink inside the target on re-runs (e.g. ghostty).
 - **LazyVim plugin overrides**: Files in `nvim/lua/plugins/` are symlinked into the LazyVim starter's plugin directory. Lazy.nvim auto-installs any plugins referenced in these specs. Plugins are synced headlessly during `dotup`.
+- **System clipboard**: Neovim yanks reach the OS clipboard in every environment. Over SSH, Neovim's built-in OSC 52 provider emits the sequence and tmux forwards it to the outer terminal (`set -g set-clipboard on` in `tmux.conf`); LazyVim leaves `clipboard` empty under SSH, so `nvim/lua/plugins/clipboard.lua` maps `<leader>y`/`<leader>Y` to the `+` register for explicit copy-out. On desktop/WSL, `xsel` (installed by `setup.sh`, needs an X server — WSLg on WSL) is auto-detected as the provider. Never hand-roll `vim.g.clipboard` — it races LazyVim's lazy-clipboard save/restore; install a provider tool instead.
+- **PHP LSP noise**: `nvim/lua/plugins/php.lua` disables phpcs linting for PHP and configures phpactor (the LazyVim-default PHP LSP) to ignore `worse.undefined_variable` (stray `$this` in include files) and to not surface phpcs/php-cs-fixer diagnostics — while keeping real cross-class diagnostics.
 - **`.platform` file**: Written by `setup.sh`, read by `update.sh`, listed in `.gitignore`. If missing, `update.sh` prompts the user to select their platform. Can be re-selected with `dotup -p`.
 - **Local git identity**: `gitconfig` includes `~/.gitconfig.local` for machine-specific `[user]` name/email (not tracked in the repo).
 - **Windows (WezTerm)**: No setup script for Windows. Download the WezTerm config with a one-liner: `curl.exe -o $HOME/.wezterm.lua https://raw.githubusercontent.com/irvj/dotfiles/main/wezterm/wezterm.lua`. Font must be installed manually on Windows.
