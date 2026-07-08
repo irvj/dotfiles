@@ -125,7 +125,8 @@ install_linux_packages() {
     fontconfig \
     fzf \
     python3-venv \
-    python3-pip
+    python3-pip \
+    xsel
 
   # install starship
   curl -sS https://starship.rs/install.sh | $pkg_cmd sh -s -- -y
