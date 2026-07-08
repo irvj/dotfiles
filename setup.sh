@@ -123,7 +123,9 @@ install_linux_packages() {
     fd-find \
     build-essential \
     fontconfig \
-    fzf
+    fzf \
+    python3-venv \
+    python3-pip
 
   # install starship
   curl -sS https://starship.rs/install.sh | $pkg_cmd sh -s -- -y
