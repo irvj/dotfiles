@@ -245,9 +245,9 @@ esac
 # --- rust toolchain ---
 
 if command -v rustup &>/dev/null; then
-  if rustup component list --installed 2>/dev/null | grep -q "^rust-analyzer"; then
-    success "rust-analyzer installed"
-  else
+  # Only report when we actually install it (or fail); staying silent when
+  # it's already present keeps routine updates quiet.
+  if ! rustup component list --installed 2>/dev/null | grep -q "^rust-analyzer"; then
     info "installing rust-analyzer component"
     if ! RUSTUP_OUTPUT=$(rustup component add rust-analyzer 2>&1); then
       error "rust-analyzer install failed"
