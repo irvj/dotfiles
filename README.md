@@ -77,23 +77,9 @@ Run as: **normal user** (uses sudo for package installation)
 curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash -s workstation
 ```
 
-### `windows` (WezTerm or Alacritty)
+### `windows`
 
-No setup script for Windows. To get the Liminal Salt-themed [WezTerm](https://wezfurlong.org/wezterm/) config, run this one-liner in PowerShell:
-
-```powershell
-curl.exe -o $HOME/.wezterm.lua https://raw.githubusercontent.com/irvj/dotfiles/main/wezterm/wezterm.lua
-```
-
-This places the config at `~/.wezterm.lua` where WezTerm automatically picks it up.
-
-For [Alacritty](https://alacritty.org), run this one-liner in PowerShell:
-
-```powershell
-curl.exe --create-dirs -o $env:APPDATA\alacritty\alacritty.toml https://raw.githubusercontent.com/irvj/dotfiles/main/alacritty/alacritty.toml
-```
-
-Both configs set JetBrains Mono Nerd Font at size 14 with the Liminal Salt color scheme and launch into WSL (`wsl.exe -d jdev`). The font must be installed manually on Windows.
+No setup script for Windows. Use [Windows Terminal](https://aka.ms/terminal) running the Linux environment through WSL — run one of the Linux routes (`workstation`, `vps`, or `proxmox`) inside your WSL distro and everything (zsh, tmux, neovim, Starship) runs there. Windows Terminal's own appearance (Liminal Salt colors, JetBrains Mono Nerd Font) is configured in its settings and is not tracked in this repo.
 
 ## Updating
 
@@ -114,7 +100,7 @@ Use `dotup -p` or `dotup --platform` to re-select your platform.
 
 ## Shared across all routes
 
-- Dotfile configs: `zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`, `wezterm/wezterm.lua`, `alacritty/alacritty.toml`, `zed/settings.json`
+- Dotfile configs: `zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`, `zed/settings.json`
 - [LazyVim](https://www.lazyvim.org) (neovim config)
 - JetBrains Mono Nerd Font (powerline glyphs, icons, coding ligatures)
 - Zsh plugins: [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions), [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)

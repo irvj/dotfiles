@@ -14,8 +14,6 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 ├── gitconfig                 # Git config (aliases, rebase pull, includes local identity)
 ├── starship.toml             # Starship prompt (powerline segments, Liminal Salt palette)
 ├── ghostty/config            # Ghostty terminal (Liminal Salt theme, JetBrains Mono Nerd Font)
-├── wezterm/wezterm.lua       # WezTerm terminal (Liminal Salt theme, JetBrains Mono Nerd Font, Windows)
-├── alacritty/alacritty.toml  # Alacritty terminal (Liminal Salt theme, JetBrains Mono Nerd Font, Windows)
 ├── zed/settings.json         # Zed editor (Liminal Salt theme, MesloLGS Nerd Font)
 ├── zed/liminal-salt.json     # Liminal Salt theme for Zed (symlinked into ~/.config/zed/themes)
 └── nvim/                     # LazyVim overrides (symlinked into ~/.config/nvim)
@@ -106,7 +104,7 @@ Steps:
 ## Key conventions
 
 - **Liminal Salt everywhere**: Starship, tmux, Ghostty, Zed, and Neovim all use the Liminal Salt palette.
-- **Font**: JetBrains Mono Nerd Font across Ghostty and WezTerm (provides powerline glyphs, icons, and coding ligatures). Installed automatically by `setup.sh` and verified by `update.sh`.
+- **Font**: JetBrains Mono Nerd Font in Ghostty (provides powerline glyphs, icons, and coding ligatures). Installed automatically by `setup.sh` and verified by `update.sh`. On Windows, the font is set manually in Windows Terminal's settings.
 - **Symlinks, not copies**: All configs are symlinked so `git pull` in `~/.dotfiles` immediately updates the live config.
 - **Directory symlinks use `ln -sfn`**: Prevents `ln -sf` from creating a nested symlink inside the target on re-runs (e.g. ghostty).
 - **LazyVim plugin overrides**: Files in `nvim/lua/plugins/` are symlinked into the LazyVim starter's plugin directory. Lazy.nvim auto-installs any plugins referenced in these specs. Plugins are synced headlessly during `dotup`.
@@ -114,8 +112,7 @@ Steps:
 - **PHP LSP noise**: `nvim/lua/plugins/php.lua` disables phpcs linting for PHP and configures phpactor (the LazyVim-default PHP LSP) to ignore `worse.undefined_variable` (stray `$this` in include files) and to not surface phpcs/php-cs-fixer diagnostics — while keeping real cross-class diagnostics.
 - **`.platform` file**: Written by `setup.sh`, read by `update.sh`, listed in `.gitignore`. If missing, `update.sh` prompts the user to select their platform. Can be re-selected with `dotup -p`.
 - **Local git identity**: `gitconfig` includes `~/.gitconfig.local` for machine-specific `[user]` name/email (not tracked in the repo).
-- **Windows (WezTerm)**: No setup script for Windows. Download the WezTerm config with a one-liner: `curl.exe -o $HOME/.wezterm.lua https://raw.githubusercontent.com/irvj/dotfiles/main/wezterm/wezterm.lua`. Font must be installed manually on Windows.
-- **Windows (Alacritty)**: No setup script for Windows. Download the Alacritty config with a one-liner: `curl.exe --create-dirs -o $env:APPDATA\alacritty\alacritty.toml https://raw.githubusercontent.com/irvj/dotfiles/main/alacritty/alacritty.toml`. Font must be installed manually on Windows.
+- **Windows (Windows Terminal)**: No setup script for Windows. The terminal environment runs inside WSL — run a Linux route (`workstation`/`vps`/`proxmox`) in the WSL distro. Windows Terminal itself supplies the Liminal Salt theme and JetBrains Mono Nerd Font via its own settings, which are not tracked in this repo.
 
 ## Zsh aliases
 
