@@ -2,18 +2,13 @@
 
 Personal dotfiles and machine setup scripts for macOS and Linux. One curl command sets up a full terminal environment: zsh with [Starship](https://starship.rs) prompt (powerline display, [Liminal Salt](https://github.com/irvj/liminal-salt) palette), tmux, neovim with [LazyVim](https://www.lazyvim.org), lazygit, [glow](https://github.com/charmbracelet/glow), and a curated set of CLI tools.
 
+Every route installs the same environment (see [What every route installs](#what-every-route-installs)); the routes differ only in who they run as and what server provisioning they add.
+
 ## Routes
 
 ### `mac`
 
-Run as: **current user**
-
-- Installs [Homebrew](https://brew.sh) if not already present
-- Installs packages via Homebrew: git, curl, wget, tmux, zsh, htop, ripgrep, fd, fzf, neovim, lazygit, starship, [glow](https://github.com/charmbracelet/glow)
-- Installs JetBrains Mono Nerd Font via Homebrew cask
-- Symlinks dotfiles (`zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`)
-- Installs [LazyVim](https://www.lazyvim.org) (neovim config)
-- Installs zsh plugins and sets zsh as default shell
+**Runs as your current user.** Installs [Homebrew](https://brew.sh) if it isn't already present and uses it as the package manager. No server provisioning.
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash -s mac
@@ -21,19 +16,15 @@ curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash 
 
 ### `vps`
 
-Run as: **root**
+**Runs as root.** Installs packages via apt, then provisions a hardened server:
 
-- Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fontconfig, fzf, python3-venv, python3-pip, xsel, starship, neovim, lazygit, [glow](https://github.com/charmbracelet/glow) (via [Charm apt repo](https://repo.charm.sh))
-- Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/`
-- Installs [Docker Engine](https://docs.docker.com/engine/install/ubuntu/) (CE, CLI, containerd, Buildx, Compose plugin)
-- Installs ufw and sudo
-- Creates a non-root user (`deploy`) with passwordless sudo and `docker` group membership
-- Copies root's SSH authorized_keys to the new user
-- Disables root SSH login and password authentication
-- Enables ufw (allows OpenSSH only)
-- Symlinks dotfiles (`zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`) for the new user
-- Installs [LazyVim](https://www.lazyvim.org) (neovim config) for the new user
-- Installs zsh plugins and sets zsh as default shell for the new user
+- [Docker Engine](https://docs.docker.com/engine/install/ubuntu/) (CE, CLI, containerd, Buildx, Compose plugin)
+- `ufw` and `sudo`
+- a non-root `deploy` user with passwordless sudo and `docker` group membership, with root's SSH `authorized_keys` copied over
+- disables root SSH login and password authentication
+- enables `ufw` (allows OpenSSH only)
+
+The dotfiles environment is installed for the `deploy` user.
 
 > **Warning:** This route locks out root SSH access and enables a firewall. Make sure your SSH key is in `/root/.ssh/authorized_keys` before running.
 
@@ -43,18 +34,7 @@ curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash 
 
 ### `proxmox`
 
-Run as: **root**
-
-- Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fontconfig, fzf, python3-venv, python3-pip, xsel, starship, neovim, lazygit, [glow](https://github.com/charmbracelet/glow) (via [Charm apt repo](https://repo.charm.sh))
-- Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/`
-- Symlinks dotfiles (`zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`) for root
-- Installs [LazyVim](https://www.lazyvim.org) (neovim config) for root
-- Installs zsh plugins and sets zsh as default shell for root
-- Does **not** install ufw or sudo
-- Does **not** create a user or modify SSH config
-- Does **not** enable a firewall
-
-Also works for LXC containers.
+**Runs as root.** Installs packages via apt and the dotfiles environment for root. Does **not** create a user, install `ufw`/`sudo`, modify SSH config, or enable a firewall. Also works for LXC containers.
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash -s proxmox
@@ -62,16 +42,7 @@ curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash 
 
 ### `workstation`
 
-Run as: **normal user** (uses sudo for package installation)
-
-- Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fontconfig, fzf, python3-venv, python3-pip, xsel, starship, neovim, lazygit, [glow](https://github.com/charmbracelet/glow) (via [Charm apt repo](https://repo.charm.sh))
-- Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/`
-- Symlinks dotfiles (`zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`)
-- Installs [LazyVim](https://www.lazyvim.org) (neovim config)
-- Installs zsh plugins and sets zsh as default shell
-- Does **not** install ufw or sudo
-- Does **not** create a user or modify SSH config
-- Does **not** enable a firewall
+**Runs as your normal user** (uses sudo for package installation). Installs packages via apt and the dotfiles environment. Does **not** create a user, install `ufw`/`sudo`, modify SSH config, or enable a firewall.
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash -s workstation
@@ -91,33 +62,27 @@ curl.exe -o "$dir\liminal-salt.json" https://raw.githubusercontent.com/irvj/dotf
 
 Then, in **Settings → Profiles → Defaults → Appearance**, set the color scheme to **Liminal Salt** and the font to **JetBrainsMono Nerd Font** (size 14). The font must be installed manually on Windows.
 
+## What every route installs
+
+Regardless of route, setup installs the same environment:
+
+- **CLI toolchain** — git, tmux, ripgrep, fd, fzf, htop, neovim, lazygit, starship, [glow](https://github.com/charmbracelet/glow), and more. The exact apt/brew package names live in [`lib/common.sh`](lib/common.sh) (the single source of truth). On mac everything comes from Homebrew; on Linux the apt packages come from `apt`, neovim/lazygit/starship from their GitHub releases, and glow from the [Charm apt repo](https://repo.charm.sh).
+- **[LazyVim](https://www.lazyvim.org)** as the neovim config, with this repo's overrides layered on top
+- **Zsh** with [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions) and [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting), set as the default shell
+- **JetBrains Mono Nerd Font** (powerline glyphs, icons, coding ligatures)
+- **Symlinked configs** — `zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`, plus the Neovim/LazyVim overrides
+- **Neovim system-clipboard yank** (`<leader>y` / `<leader>Y`) — OSC 52 forwarded by tmux over SSH, `xsel` on desktop/WSL
+
 ## Updating
 
-After initial setup, run `dotup` from any shell to update everything:
+Run `dotup` from any shell. It brings the machine up to date with whatever its route installed — upgrading what's there and installing anything newly added to the config:
 
-- Pulls latest dotfiles and re-symlinks configs
-- Syncs LazyVim plugins headlessly
-- Updates zsh plugins
-- Upgrades system packages (Homebrew on mac, apt on Linux)
-- Ensures every declared package (`lib/common.sh`) is installed, so tools added to the list reach machines set up before they existed
-- Checks neovim, lazygit, and starship versions — only downloads when a newer version is available (arch-aware: x86_64 or arm64)
-- Installs glow if missing (Homebrew on Mac, Charm apt repo on Linux)
-- Installs JetBrains Mono Nerd Font if missing
-- Keeps the rust toolchain current (`rustup update`) when rustup is installed
-- Detects kernel updates on Linux and recommends reboot
+- **Dotfiles & configs** — pulls this repo, re-runs `install.sh` (re-symlinks everything), syncs LazyVim plugins, and updates the zsh plugins
+- **Packages** — upgrades all system packages (Homebrew or apt) and installs any newly-added ones from [`lib/common.sh`](lib/common.sh), so the declared set is always complete
+- **Pinned tools** — updates neovim, lazygit, and starship to the latest release (arch-aware: x86_64 or arm64) and installs the Nerd Font if missing
+- **Housekeeping** — recommends a reboot when the Linux kernel was updated, and runs `rustup update` when rustup is installed
 
-Output is minimal with colored status indicators (`✓` up to date, `→` updating, `✗` error).
-
-Use `dotup -p` or `dotup --platform` to re-select your platform.
-
-## Shared across all routes
-
-- Dotfile configs: `zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`
-- [LazyVim](https://www.lazyvim.org) (neovim config)
-- JetBrains Mono Nerd Font (powerline glyphs, icons, coding ligatures)
-- Zsh plugins: [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions), [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
-- System-clipboard yank from Neovim (`<leader>y` / `<leader>Y`): OSC 52 forwarded by tmux over SSH, `xsel` on desktop/WSL
-- Sets zsh as default shell
+Output is minimal, with colored status indicators (`✓` up to date, `→` updating, `✗` error). Re-select the platform with `dotup -p` or `dotup --platform`.
 
 ## Options
 
