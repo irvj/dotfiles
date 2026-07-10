@@ -14,9 +14,6 @@ ln -sf $DOTFILES/tmux.conf ~/.tmux.conf
 ln -sf $DOTFILES/gitconfig ~/.gitconfig
 ln -sf $DOTFILES/starship.toml ~/.config/starship.toml
 ln -sfn $DOTFILES/ghostty ~/.config/ghostty
-mkdir -p ~/.config/zed/themes
-ln -sf $DOTFILES/zed/settings.json ~/.config/zed/settings.json
-ln -sf $DOTFILES/zed/liminal-salt.json ~/.config/zed/themes/liminal-salt.json
 
 # --- install lazyvim ---
 

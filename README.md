@@ -11,7 +11,7 @@ Run as: **current user**
 - Installs [Homebrew](https://brew.sh) if not already present
 - Installs packages via Homebrew: git, curl, wget, tmux, zsh, htop, ripgrep, fd, fzf, neovim, lazygit, starship, [glow](https://github.com/charmbracelet/glow)
 - Installs JetBrains Mono Nerd Font via Homebrew cask
-- Symlinks dotfiles (`zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`, `zed/settings.json`)
+- Symlinks dotfiles (`zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`)
 - Installs [LazyVim](https://www.lazyvim.org) (neovim config)
 - Installs zsh plugins and sets zsh as default shell
 
@@ -66,7 +66,7 @@ Run as: **normal user** (uses sudo for package installation)
 
 - Installs Linux packages: git, curl, wget, tmux, zsh, htop, unzip, ripgrep, fd-find, build-essential, fontconfig, fzf, python3-venv, python3-pip, xsel, starship, neovim, lazygit, [glow](https://github.com/charmbracelet/glow) (via [Charm apt repo](https://repo.charm.sh))
 - Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/`
-- Symlinks dotfiles (`zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`, `zed/settings.json`)
+- Symlinks dotfiles (`zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`)
 - Installs [LazyVim](https://www.lazyvim.org) (neovim config)
 - Installs zsh plugins and sets zsh as default shell
 - Does **not** install ufw or sudo
@@ -112,7 +112,7 @@ Use `dotup -p` or `dotup --platform` to re-select your platform.
 
 ## Shared across all routes
 
-- Dotfile configs: `zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`, `zed/settings.json`
+- Dotfile configs: `zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`
 - [LazyVim](https://www.lazyvim.org) (neovim config)
 - JetBrains Mono Nerd Font (powerline glyphs, icons, coding ligatures)
 - Zsh plugins: [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions), [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)

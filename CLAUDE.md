@@ -16,8 +16,6 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 ├── starship.toml             # Starship prompt (powerline segments, Liminal Salt palette)
 ├── ghostty/config            # Ghostty terminal (Liminal Salt theme, JetBrains Mono Nerd Font)
 ├── windows-terminal/liminal-salt.json  # Windows Terminal color scheme fragment (Liminal Salt); manual drop-in, not symlinked
-├── zed/settings.json         # Zed editor (Liminal Salt theme, MesloLGS Nerd Font)
-├── zed/liminal-salt.json     # Liminal Salt theme for Zed (symlinked into ~/.config/zed/themes)
 └── nvim/                     # LazyVim overrides (symlinked into ~/.config/nvim)
     ├── colors/               # Entry points: liminal-salt-dark.lua, liminal-salt-light.lua
     ├── markdownlint-cli2.yaml # Disables MD013 (line length); passed via --config by markdown.lua
@@ -67,8 +65,6 @@ Creates symlinks from `~/.dotfiles/` into the home directory:
 - `gitconfig` → `~/.gitconfig`
 - `starship.toml` → `~/.config/starship.toml`
 - `ghostty/` → `~/.config/ghostty` (directory symlink, uses `ln -sfn`)
-- `zed/settings.json` → `~/.config/zed/settings.json`
-- `zed/liminal-salt.json` → `~/.config/zed/themes/liminal-salt.json`
 
 Clones the LazyVim starter to `~/.config/nvim` if it doesn't exist (first install only), then symlinks all `nvim/colors/*.vim` files into the Neovim colors directory and all `nvim/lua/plugins/*.lua` files into the LazyVim plugins directory.
 
@@ -105,7 +101,7 @@ Steps:
 
 ## Key conventions
 
-- **Liminal Salt everywhere**: Starship, tmux, Ghostty, Zed, and Neovim all use the Liminal Salt palette.
+- **Liminal Salt everywhere**: Starship, tmux, Ghostty, and Neovim all use the Liminal Salt palette.
 - **Font**: JetBrains Mono Nerd Font in Ghostty (provides powerline glyphs, icons, and coding ligatures). Installed automatically by `setup.sh` and verified by `update.sh`. On Windows, the font is set manually in Windows Terminal's settings.
 - **Symlinks, not copies**: All configs are symlinked so `git pull` in `~/.dotfiles` immediately updates the live config.
 - **One place to add a tool**: Package lists live only in `lib/common.sh`. Add a package there (`APT_PACKAGES` or `BREW_PACKAGES`) and both `setup.sh` (fresh installs) and `dotup` (existing machines, via the idempotent ensure-install step) pick it up — never re-declare a package list inside `setup.sh` or `update.sh`. Tools that aren't plain apt/brew packages (neovim, lazygit, starship, glow-on-Linux, the Nerd Font) have their own install/version-check logic in both scripts.
