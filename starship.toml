@@ -106,11 +106,6 @@ symbol = ""
 style = "bg:teal"
 format = '[[ $symbol( $version)(\(#$virtualenv\)) ](fg:crust bg:teal)]($style)'
 
-[docker_context]
-symbol = ""
-style = "bg:light_gray"
-format = '[[ $symbol( $context) ](fg:white bg:light_gray)]($style)'
-
 [time]
 disabled = false
 time_format = "%R"
@@ -150,3 +145,4 @@ blue = "#8fac98"
 dark_blue = "#506e58"
 red = "#cc8585"
 green = "#7dba8a"
+yellow = "#c9a86c"

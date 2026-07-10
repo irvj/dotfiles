@@ -66,7 +66,7 @@ Creates symlinks from `~/.dotfiles/` into the home directory:
 - `starship.toml` → `~/.config/starship.toml`
 - `ghostty/` → `~/.config/ghostty` (directory symlink, uses `ln -sfn`)
 
-Clones the LazyVim starter to `~/.config/nvim` if it doesn't exist (first install only), then symlinks all `nvim/colors/*.vim` files into the Neovim colors directory and all `nvim/lua/plugins/*.lua` files into the LazyVim plugins directory.
+Clones the LazyVim starter to `~/.config/nvim` if it doesn't exist (first install only), then symlinks all `nvim/colors/*.lua` files into the Neovim colors directory and all `nvim/lua/plugins/*.lua` files into the LazyVim plugins directory.
 
 ## How update works
 

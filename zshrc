@@ -20,7 +20,11 @@ fi
 # --- homebrew (mac only) ---
 
 if [[ -f ~/.dotfiles/.platform ]] && [[ "$(cat ~/.dotfiles/.platform)" == "mac" ]]; then
-  eval "$(/opt/homebrew/bin/brew shellenv)"
+  if [[ -x /opt/homebrew/bin/brew ]]; then       # Apple Silicon
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [[ -x /usr/local/bin/brew ]]; then        # Intel
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
 fi
 
 # --- nvm ---
@@ -32,6 +36,10 @@ export NVM_DIR="$HOME/.nvm"
 # --- path ---
 
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+
+# --- rust (cargo) ---
+
+[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
 
 # --- plugins ---
 
@@ -126,15 +134,15 @@ alias dotup='~/.dotfiles/update.sh'
 # --- extract function ---
 
 extract() {
-  case $1 in
-    *.tar.gz|*.tgz) tar xzf $1 ;;
-    *.tar.bz2|*.tbz2) tar xjf $1 ;;
-    *.tar.xz) tar xJf $1 ;;
-    *.tar) tar xf $1 ;;
-    *.zip) unzip $1 ;;
-    *.gz) gunzip $1 ;;
-    *.bz2) bunzip2 $1 ;;
-    *.7z) 7z x $1 ;;
+  case "$1" in
+    *.tar.gz|*.tgz) tar xzf "$1" ;;
+    *.tar.bz2|*.tbz2) tar xjf "$1" ;;
+    *.tar.xz) tar xJf "$1" ;;
+    *.tar) tar xf "$1" ;;
+    *.zip) unzip "$1" ;;
+    *.gz) gunzip "$1" ;;
+    *.bz2) bunzip2 "$1" ;;
+    *.7z) 7z x "$1" ;;
     *) echo "unknown format: $1" ;;
   esac
 }

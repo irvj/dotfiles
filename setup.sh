@@ -171,6 +171,14 @@ install_docker() {
 harden_vps() {
   print_header "Harden VPS"
 
+  # require root's SSH key before we disable password login, or the new user
+  # (and you) would be locked out
+  if [[ ! -f /root/.ssh/authorized_keys ]]; then
+    echo "Error: /root/.ssh/authorized_keys not found." >&2
+    echo "Add your SSH key for root before running the vps route." >&2
+    exit 1
+  fi
+
   apt install -y ufw sudo
 
   # create user (skip if already exists)
@@ -187,10 +195,19 @@ harden_vps() {
   chmod 700 "/home/$USERNAME/.ssh"
   chmod 600 "/home/$USERNAME/.ssh/authorized_keys"
 
-  # lock down ssh
+  # lock down ssh via a drop-in. sshd reads the first value for each keyword,
+  # and the main config's `Include /etc/ssh/sshd_config.d/*.conf` is near the
+  # top — so a cloud-init drop-in (50-cloud-init.conf, PasswordAuthentication
+  # yes) would win over edits to the main file. A 01- drop-in sorts first and
+  # wins. The main-file edits stay as a fallback for images without an Include.
+  mkdir -p /etc/ssh/sshd_config.d
+  cat > /etc/ssh/sshd_config.d/01-hardening.conf <<'EOF'
+PermitRootLogin no
+PasswordAuthentication no
+EOF
   sed -i 's/#\?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
   sed -i 's/#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
-  systemctl restart ssh
+  systemctl restart ssh 2>/dev/null || systemctl restart sshd
 
   # firewall
   ufw allow OpenSSH
@@ -288,6 +305,20 @@ run_install() {
   $run_cmd "$home_dir/.dotfiles/install.sh"
 }
 
+remind_git_identity() {
+  local home_dir="$1"
+
+  # gitconfig includes ~/.gitconfig.local for identity but setup doesn't create
+  # it; without it, commits fail with "please tell me who you are"
+  if [[ ! -f "$home_dir/.gitconfig.local" ]]; then
+    echo ""
+    echo "Reminder: set your git identity in $home_dir/.gitconfig.local"
+    echo "  [user]"
+    echo "      name = Your Name"
+    echo "      email = you@example.com"
+  fi
+}
+
 # --- main ---
 
 case "$PLATFORM" in
@@ -299,6 +330,7 @@ case "$PLATFORM" in
     echo "mac" > "$HOME/.dotfiles/.platform"
     run_install "$HOME" ""
 
+    remind_git_identity "$HOME"
     print_header "Done. Restart your terminal."
     ;;
 
@@ -315,6 +347,7 @@ case "$PLATFORM" in
     run_install "/home/$USERNAME" "sudo -u $USERNAME"
     chsh -s "$(which zsh)" "$USERNAME"
 
+    remind_git_identity "/home/$USERNAME"
     print_header "Done. SSH in as $USERNAME"
     ;;
 
@@ -328,6 +361,7 @@ case "$PLATFORM" in
     run_install "/root" ""
     chsh -s "$(which zsh)" root
 
+    remind_git_identity "/root"
     print_header "Done. Restart your shell."
     ;;
 
@@ -341,6 +375,7 @@ case "$PLATFORM" in
     run_install "$HOME" ""
     sudo chsh -s "$(which zsh)" "$USER"
 
+    remind_git_identity "$HOME"
     print_header "Done. Restart your terminal."
     ;;
 esac
