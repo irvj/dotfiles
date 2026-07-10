@@ -117,6 +117,12 @@ fi
 
 case "$PLATFORM" in
   mac)
+    # we run `brew update` explicitly below, so suppress the implicit
+    # auto-update that otherwise fires (and dumps its summary to the terminal)
+    # before every brew install/upgrade; also drop the post-command env hints
+    export HOMEBREW_NO_AUTO_UPDATE=1
+    export HOMEBREW_NO_ENV_HINTS=1
+
     NVIM_BEFORE=$(nvim --version 2>/dev/null | head -1 | sed 's/NVIM v//' || echo "none")
     LAZYGIT_BEFORE=$(lazygit --version 2>/dev/null | grep -oE 'version=[^,]+' | head -1 | sed 's/version=//' || echo "none")
     STARSHIP_BEFORE=$(starship --version 2>/dev/null | head -1 | sed 's/starship //' || echo "none")
@@ -132,7 +138,7 @@ case "$PLATFORM" in
     fi
     success "declared formulae present"
 
-    if ! BREW_OUTPUT=$(HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade 2>&1); then
+    if ! BREW_OUTPUT=$(brew upgrade 2>&1); then
       error "homebrew update failed"
       echo "$BREW_OUTPUT"
       exit 1
