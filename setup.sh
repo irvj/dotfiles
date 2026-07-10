@@ -3,6 +3,8 @@ set -e
 
 USERNAME="deploy"
 DOTFILES_REPO="https://github.com/irvj/dotfiles.git"
+# raw base for fetching the shared package list before the repo is cloned
+RAW_BASE="https://raw.githubusercontent.com/irvj/dotfiles/main"
 AUTO_YES=false
 
 # --- argument parsing ---
@@ -111,36 +113,28 @@ install_linux_packages() {
   print_header "Install Linux packages"
 
   $pkg_cmd apt update && $pkg_cmd apt upgrade -y
-  $pkg_cmd apt install -y \
-    git \
-    curl \
-    wget \
-    tmux \
-    zsh \
-    htop \
-    unzip \
-    ripgrep \
-    fd-find \
-    build-essential \
-    fontconfig \
-    fzf \
-    python3-venv \
-    python3-pip \
-    xsel
+
+  # bootstrap curl so we can fetch the shared package list (single source of
+  # truth in lib/common.sh), then install the declared packages
+  $pkg_cmd apt install -y curl ca-certificates gnupg
+  curl -fsSL "$RAW_BASE/lib/common.sh" -o /tmp/dotfiles-common.sh
+  source /tmp/dotfiles-common.sh
+  detect_arch
+  $pkg_cmd apt install -y "${APT_PACKAGES[@]}"
 
   # install starship
   curl -sS https://starship.rs/install.sh | $pkg_cmd sh -s -- -y
 
   # install neovim
-  curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
-  tar xzf nvim-linux-x86_64.tar.gz
-  $pkg_cmd mv nvim-linux-x86_64 /opt/nvim
+  curl -LO "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-${NVIM_ARCH}.tar.gz"
+  tar xzf "nvim-linux-${NVIM_ARCH}.tar.gz"
+  $pkg_cmd mv "nvim-linux-${NVIM_ARCH}" /opt/nvim
   $pkg_cmd ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
-  rm nvim-linux-x86_64.tar.gz
+  rm "nvim-linux-${NVIM_ARCH}.tar.gz"
 
   # install lazygit
   LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-  curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+  curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_${LG_ARCH}.tar.gz"
   tar xf lazygit.tar.gz lazygit
   $pkg_cmd install lazygit /usr/local/bin
   rm lazygit lazygit.tar.gz
@@ -221,20 +215,11 @@ setup_mac() {
     fi
   fi
 
-  brew install \
-    git \
-    curl \
-    wget \
-    tmux \
-    zsh \
-    htop \
-    ripgrep \
-    fd \
-    fzf \
-    neovim \
-    lazygit \
-    starship \
-    glow
+  # fetch the shared package list (single source of truth in lib/common.sh);
+  # curl ships with macOS
+  curl -fsSL "$RAW_BASE/lib/common.sh" -o /tmp/dotfiles-common.sh
+  source /tmp/dotfiles-common.sh
+  brew install "${BREW_PACKAGES[@]}"
 
   brew install --cask font-jetbrains-mono-nerd-font
 }

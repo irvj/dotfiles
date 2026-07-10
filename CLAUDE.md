@@ -8,6 +8,7 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 ├── setup.sh                  # Entry point: provisions a new machine
 ├── install.sh                # Symlinks all configs into place
 ├── update.sh                 # Updates everything (run via `dotup` alias)
+├── lib/common.sh             # Shared package lists (APT_PACKAGES, BREW_PACKAGES) + detect_arch; sourced by setup.sh and update.sh
 ├── .gitignore                # Ignores .platform marker file
 ├── zshrc                     # Zsh config (aliases, plugins, prompt)
 ├── tmux.conf                 # Tmux config (prefix Ctrl-A, vim nav, Liminal Salt status bar, OSC 52 clipboard)
@@ -46,7 +47,7 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 | `workstation` | normal user  | apt (with sudo) | no        | no           |
 
 Each platform case:
-1. Installs system packages and CLI tools (on Linux: fontconfig; `python3-venv`/`python3-pip` for Mason's pip-based tools like ruff; `xsel` as the system-clipboard provider; glow via Charm apt repo. On Mac: glow via Homebrew)
+1. Installs system packages and CLI tools. The package lists live in `lib/common.sh` (`APT_PACKAGES`, `BREW_PACKAGES`) as the single source of truth — `setup.sh` fetches that file via `curl` (before the repo is cloned) and installs from it, and `update.sh` reads it too, so a package added there reaches both fresh installs and existing machines. (On Linux the list includes fontconfig; `python3-venv`/`python3-pip` for Mason's pip-based tools like ruff; `xsel` as the system-clipboard provider. glow is separate on Linux — installed via the Charm apt repo, not the apt list. On Mac glow is in `BREW_PACKAGES`.)
 2. Installs JetBrains Mono Nerd Font (Homebrew cask on mac, downloaded from Nerd Fonts GitHub releases on Linux to `~/.local/share/fonts/`)
 3. Optionally resets existing shell config (interactive prompt, skip with `-y`)
 4. Installs zsh plugins (zsh-autosuggestions, zsh-syntax-highlighting) to `~/.zsh/`
@@ -86,27 +87,28 @@ Steps:
 6. Runs platform-specific updates:
 
 **Mac:**
-- Runs `brew update && brew upgrade` (output suppressed)
+- Runs `brew update`, then `brew install "${BREW_PACKAGES[@]}"` to ensure every declared formula (including glow) is present — this is what propagates a newly-added package to existing machines — then `brew upgrade`
 - Shows before/after version comparison for neovim, lazygit, and starship
-- Installs glow via Homebrew if missing
 - Installs JetBrains Mono Nerd Font cask if missing
 
 **Linux (vps/workstation/proxmox):**
 - Uses a `$SUDO` prefix (set for vps/workstation, empty for proxmox) to deduplicate the three Linux paths into one block
-- Runs `apt-get update && apt-get upgrade` (output suppressed, shown on failure)
+- Runs `apt-get update && apt-get upgrade` (a single update; `LC_ALL=C` forces English output so the status greps stay reliable, output suppressed, shown on failure)
 - Detects kernel updates (`linux-image` or `pve-kernel`) and recommends reboot
-- Checks neovim, lazygit, and starship versions against latest GitHub releases; only downloads when a new version is available
-- Adds the Charm apt repo and installs glow if missing (updated automatically via `apt-get upgrade`)
+- Runs `apt-get install -y "${APT_PACKAGES[@]}"` to ensure every declared package is present — this propagates newly-added packages to existing machines (no-op when all present)
+- Checks neovim, lazygit, and starship versions against latest GitHub releases; only downloads when a new version is available. Downloads are arch-aware (`detect_arch` maps `uname -m` to the neovim/lazygit asset names, x86_64 or arm64) and land in a `mktemp -d` scratch dir, not the cwd
+- Adds the Charm apt repo and installs glow if missing (the repo add is deferred so only one `apt-get update` runs; glow stays current via `apt-get upgrade`)
 - Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/` if missing (checks for font files directly, no dependency on fontconfig)
 
 **Cross-platform (runs after the platform block):**
-- If `rustup` is on PATH, ensures the `rust-analyzer` component is installed (required by LazyVim's Rust extra; the cargo shim at `~/.cargo/bin/rust-analyzer` errors without it). Silent when already present — only reports when it installs the component or fails. No-op when rustup isn't installed.
+- If `rustup` is on PATH, runs `rustup update` (reported only when a toolchain actually changes) and ensures the `rust-analyzer` component is installed (required by LazyVim's Rust extra; the cargo shim at `~/.cargo/bin/rust-analyzer` errors without it). Silent when already current — only reports on change or failure. No-op when rustup isn't installed.
 
 ## Key conventions
 
 - **Liminal Salt everywhere**: Starship, tmux, Ghostty, Zed, and Neovim all use the Liminal Salt palette.
 - **Font**: JetBrains Mono Nerd Font in Ghostty (provides powerline glyphs, icons, and coding ligatures). Installed automatically by `setup.sh` and verified by `update.sh`. On Windows, the font is set manually in Windows Terminal's settings.
 - **Symlinks, not copies**: All configs are symlinked so `git pull` in `~/.dotfiles` immediately updates the live config.
+- **One place to add a tool**: Package lists live only in `lib/common.sh`. Add a package there (`APT_PACKAGES` or `BREW_PACKAGES`) and both `setup.sh` (fresh installs) and `dotup` (existing machines, via the idempotent ensure-install step) pick it up — never re-declare a package list inside `setup.sh` or `update.sh`. Tools that aren't plain apt/brew packages (neovim, lazygit, starship, glow-on-Linux, the Nerd Font) have their own install/version-check logic in both scripts.
 - **Directory symlinks use `ln -sfn`**: Prevents `ln -sf` from creating a nested symlink inside the target on re-runs (e.g. ghostty).
 - **LazyVim plugin overrides**: Files in `nvim/lua/plugins/` are symlinked into the LazyVim starter's plugin directory. Lazy.nvim auto-installs any plugins referenced in these specs. Plugins are synced headlessly during `dotup`.
 - **System clipboard**: Neovim yanks reach the OS clipboard in every environment. Over SSH, Neovim's built-in OSC 52 provider emits the sequence and tmux forwards it to the outer terminal (`set -g set-clipboard on` in `tmux.conf`); LazyVim leaves `clipboard` empty under SSH, so `nvim/lua/plugins/clipboard.lua` maps `<leader>y`/`<leader>Y` to the `+` register for explicit copy-out. On desktop/WSL, `xsel` (installed by `setup.sh`, needs an X server — WSLg on WSL) is auto-detected as the provider. Never hand-roll `vim.g.clipboard` — it races LazyVim's lazy-clipboard save/restore; install a provider tool instead.

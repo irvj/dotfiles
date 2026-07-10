@@ -99,9 +99,11 @@ After initial setup, run `dotup` from any shell to update everything:
 - Syncs LazyVim plugins headlessly
 - Updates zsh plugins
 - Upgrades system packages (Homebrew on mac, apt on Linux)
-- Checks neovim, lazygit, and starship versions — only downloads when a newer version is available
+- Ensures every declared package (`lib/common.sh`) is installed, so tools added to the list reach machines set up before they existed
+- Checks neovim, lazygit, and starship versions — only downloads when a newer version is available (arch-aware: x86_64 or arm64)
 - Installs glow if missing (Homebrew on Mac, Charm apt repo on Linux)
 - Installs JetBrains Mono Nerd Font if missing
+- Keeps the rust toolchain current (`rustup update`) when rustup is installed
 - Detects kernel updates on Linux and recommends reboot
 
 Output is minimal with colored status indicators (`✓` up to date, `→` updating, `✗` error).

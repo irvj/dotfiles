@@ -74,6 +74,15 @@ else
   fi
 fi
 
+# --- shared package lists + helpers (read after the pull so newly-added
+#     packages are picked up on this run) ---
+
+if [[ ! -f "$DOTFILES/lib/common.sh" ]]; then
+  error "lib/common.sh missing — is the dotfiles clone complete?"
+  exit 1
+fi
+source "$DOTFILES/lib/common.sh"
+
 # --- re-run install.sh ---
 
 "$DOTFILES/install.sh" > /dev/null
@@ -113,6 +122,16 @@ case "$PLATFORM" in
     STARSHIP_BEFORE=$(starship --version 2>/dev/null | head -1 | sed 's/starship //' || echo "none")
 
     brew update > /dev/null 2>&1
+
+    # ensure every declared formula is present (installs newly-added ones on
+    # machines set up before the package was added; no-op when all present)
+    if ! BREW_INSTALL_OUTPUT=$(brew install "${BREW_PACKAGES[@]}" 2>&1); then
+      error "formula install failed"
+      echo "$BREW_INSTALL_OUTPUT"
+      exit 1
+    fi
+    success "declared formulae present"
+
     if ! BREW_OUTPUT=$(HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade 2>&1); then
       error "homebrew update failed"
       echo "$BREW_OUTPUT"
@@ -141,11 +160,6 @@ case "$PLATFORM" in
       fi
     done
 
-    if ! command -v glow &>/dev/null; then
-      brew install glow > /dev/null 2>&1
-      success "glow installed"
-    fi
-
     if ! brew list --cask font-jetbrains-mono-nerd-font &>/dev/null; then
       if ! FONT_OUTPUT=$(brew install --cask font-jetbrains-mono-nerd-font 2>&1); then
         error "jetbrains mono nerd font install failed"
@@ -162,16 +176,20 @@ case "$PLATFORM" in
       SUDO="sudo"
     fi
 
+    detect_arch || exit 1
+
+    # add the Charm apt repo if glow is missing; the actual install happens
+    # after the apt update below so we don't run `apt-get update` twice
+    GLOW_MISSING=false
     if ! command -v glow &>/dev/null; then
+      GLOW_MISSING=true
       $SUDO mkdir -p /etc/apt/keyrings
       curl -fsSL https://repo.charm.sh/apt/gpg.key | $SUDO gpg --dearmor -o /etc/apt/keyrings/charm.gpg
       echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | $SUDO tee /etc/apt/sources.list.d/charm.list > /dev/null
-      $SUDO apt-get update > /dev/null 2>&1
-      $SUDO apt-get install -y glow > /dev/null 2>&1
-      success "glow installed"
     fi
 
-    if ! APT_OUTPUT=$($SUDO apt-get update && $SUDO apt-get upgrade -y 2>&1); then
+    # LC_ALL=C forces English apt output so the greps below stay reliable
+    if ! APT_OUTPUT=$($SUDO env LC_ALL=C apt-get update && $SUDO env LC_ALL=C apt-get upgrade -y 2>&1); then
       error "system package update failed"
       echo "$APT_OUTPUT"
       exit 1
@@ -185,16 +203,35 @@ case "$PLATFORM" in
       info "kernel updated, reboot recommended"
     fi
 
+    if $GLOW_MISSING; then
+      $SUDO env LC_ALL=C apt-get install -y glow > /dev/null 2>&1
+      success "glow installed"
+    fi
+
+    # ensure every declared apt package is present (installs newly-added ones
+    # on machines provisioned before the package was added; no-op otherwise)
+    if ! PKG_OUTPUT=$($SUDO env LC_ALL=C apt-get install -y "${APT_PACKAGES[@]}" 2>&1); then
+      error "package install failed"
+      echo "$PKG_OUTPUT"
+      exit 1
+    fi
+    if echo "$PKG_OUTPUT" | grep -q "0 newly installed"; then
+      success "declared packages present"
+    else
+      info "installed missing packages"
+    fi
+
     NVIM_LATEST=$(curl -s "https://api.github.com/repos/neovim/neovim/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
     NVIM_CURRENT=$(nvim --version 2>/dev/null | head -1 | grep -Po 'v\K\S+' || echo "none")
     if [[ "$NVIM_CURRENT" != "$NVIM_LATEST" ]]; then
       info "neovim v$NVIM_CURRENT → v$NVIM_LATEST"
-      curl -sLO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
-      tar xzf nvim-linux-x86_64.tar.gz
+      DL=$(mktemp -d)
+      curl -sLo "$DL/nvim.tar.gz" "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-${NVIM_ARCH}.tar.gz"
+      tar xzf "$DL/nvim.tar.gz" -C "$DL"
       $SUDO rm -rf /opt/nvim
-      $SUDO mv nvim-linux-x86_64 /opt/nvim
+      $SUDO mv "$DL/nvim-linux-${NVIM_ARCH}" /opt/nvim
       $SUDO ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
-      rm nvim-linux-x86_64.tar.gz
+      rm -rf "$DL"
     else
       success "neovim v$NVIM_CURRENT"
     fi
@@ -203,10 +240,11 @@ case "$PLATFORM" in
     LAZYGIT_CURRENT=$(lazygit --version 2>/dev/null | grep -Po ', version=\K[^,]+' || echo "none")
     if [[ "$LAZYGIT_CURRENT" != "$LAZYGIT_LATEST" ]]; then
       info "lazygit v$LAZYGIT_CURRENT → v$LAZYGIT_LATEST"
-      curl -sLo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_LATEST}_Linux_x86_64.tar.gz"
-      tar xf lazygit.tar.gz lazygit
-      $SUDO install lazygit /usr/local/bin
-      rm lazygit lazygit.tar.gz
+      DL=$(mktemp -d)
+      curl -sLo "$DL/lazygit.tar.gz" "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_LATEST}_Linux_${LG_ARCH}.tar.gz"
+      tar xf "$DL/lazygit.tar.gz" -C "$DL" lazygit
+      $SUDO install "$DL/lazygit" /usr/local/bin
+      rm -rf "$DL"
     else
       success "lazygit v$LAZYGIT_CURRENT"
     fi
@@ -245,6 +283,11 @@ esac
 # --- rust toolchain ---
 
 if command -v rustup &>/dev/null; then
+  # keep toolchains current (rustup update also self-updates rustup); only
+  # report when something actually changes to keep routine updates quiet
+  if rustup update 2>&1 | grep -q "updated"; then
+    info "rust toolchains updated"
+  fi
   # Only report when we actually install it (or fail); staying silent when
   # it's already present keeps routine updates quiet.
   if ! rustup component list --installed 2>/dev/null | grep -q "^rust-analyzer"; then
