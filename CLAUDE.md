@@ -14,6 +14,7 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 ├── gitconfig                 # Git config (aliases, rebase pull, includes local identity)
 ├── starship.toml             # Starship prompt (powerline segments, Liminal Salt palette)
 ├── ghostty/config            # Ghostty terminal (Liminal Salt theme, JetBrains Mono Nerd Font)
+├── windows-terminal/liminal-salt.json  # Windows Terminal color scheme fragment (Liminal Salt); manual drop-in, not symlinked
 ├── zed/settings.json         # Zed editor (Liminal Salt theme, MesloLGS Nerd Font)
 ├── zed/liminal-salt.json     # Liminal Salt theme for Zed (symlinked into ~/.config/zed/themes)
 └── nvim/                     # LazyVim overrides (symlinked into ~/.config/nvim)
@@ -112,7 +113,7 @@ Steps:
 - **PHP LSP noise**: `nvim/lua/plugins/php.lua` disables phpcs linting for PHP and configures phpactor (the LazyVim-default PHP LSP) to ignore `worse.undefined_variable` (stray `$this` in include files) and to not surface phpcs/php-cs-fixer diagnostics — while keeping real cross-class diagnostics.
 - **`.platform` file**: Written by `setup.sh`, read by `update.sh`, listed in `.gitignore`. If missing, `update.sh` prompts the user to select their platform. Can be re-selected with `dotup -p`.
 - **Local git identity**: `gitconfig` includes `~/.gitconfig.local` for machine-specific `[user]` name/email (not tracked in the repo).
-- **Windows (Windows Terminal)**: No setup script for Windows. The terminal environment runs inside WSL — run a Linux route (`workstation`/`vps`/`proxmox`) in the WSL distro. Windows Terminal itself supplies the Liminal Salt theme and JetBrains Mono Nerd Font via its own settings, which are not tracked in this repo.
+- **Windows (Windows Terminal)**: No setup script for Windows. The terminal environment runs inside WSL — run the `workstation` route in the WSL distro. The Liminal Salt color scheme ships as a Windows Terminal fragment (`windows-terminal/liminal-salt.json`, palette mirrored from `ghostty/config`): dropped into `%LOCALAPPDATA%\Microsoft\Windows Terminal\Fragments\liminal-salt\`, it auto-loads into the scheme dropdown. Selecting the scheme and setting JetBrains Mono Nerd Font are done manually in Windows Terminal's settings; the font must be installed on Windows.
 
 ## Zsh aliases
 

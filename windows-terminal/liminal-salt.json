@@ -1,0 +1,30 @@
+{
+  "schemes": [
+    {
+      "name": "Liminal Salt",
+
+      "background": "#1a1c1b",
+      "foreground": "#e8e4dc",
+      "cursorColor": "#8fac98",
+      "selectionBackground": "#3d4741",
+
+      "black": "#141615",
+      "red": "#cc8585",
+      "green": "#7dba8a",
+      "yellow": "#c9a86c",
+      "blue": "#7eb8c9",
+      "purple": "#c9956c",
+      "cyan": "#95bebe",
+      "white": "#c5c1b8",
+
+      "brightBlack": "#6b7369",
+      "brightRed": "#d99292",
+      "brightGreen": "#a3bfac",
+      "brightYellow": "#c9a86c",
+      "brightBlue": "#7eb8c9",
+      "brightPurple": "#c9956c",
+      "brightCyan": "#95bebe",
+      "brightWhite": "#e8e4dc"
+    }
+  ]
+}

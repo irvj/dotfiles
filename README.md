@@ -79,7 +79,17 @@ curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash 
 
 ### `windows`
 
-No setup script for Windows. Use [Windows Terminal](https://aka.ms/terminal) running the Linux environment through WSL — run one of the Linux routes (`workstation`, `vps`, or `proxmox`) inside your WSL distro and everything (zsh, tmux, neovim, Starship) runs there. Windows Terminal's own appearance (Liminal Salt colors, JetBrains Mono Nerd Font) is configured in its settings and is not tracked in this repo.
+No setup script for Windows. Use [Windows Terminal](https://aka.ms/terminal) running the Linux environment through WSL — run the `workstation` route inside your WSL distro and everything (zsh, tmux, neovim, Starship) runs there.
+
+For the Liminal Salt color scheme, install the Windows Terminal fragment. Run this in PowerShell to drop it into Windows Terminal's `Fragments` folder, where it's picked up automatically:
+
+```powershell
+$dir = "$env:LOCALAPPDATA\Microsoft\Windows Terminal\Fragments\liminal-salt"
+New-Item -ItemType Directory -Force -Path $dir | Out-Null
+curl.exe -o "$dir\liminal-salt.json" https://raw.githubusercontent.com/irvj/dotfiles/main/windows-terminal/liminal-salt.json
+```
+
+Then, in **Settings → Profiles → Defaults → Appearance**, set the color scheme to **Liminal Salt** and the font to **JetBrainsMono Nerd Font** (size 14). The font must be installed manually on Windows.
 
 ## Updating
 
