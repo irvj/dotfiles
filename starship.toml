@@ -1,8 +1,5 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
-command_timeout = 1000
-scan_timeout = 500
-
 format = """
 [](dark_blue)\
 $os\
@@ -129,7 +126,7 @@ show_milliseconds = false
 format = " in $duration "
 style = "bg:gray"
 disabled = false
-show_notifications = true
+show_notifications = false
 min_time_to_notify = 45000
 
 [palettes.liminal_salt]
