@@ -257,6 +257,39 @@ install_nerd_font() {
   fc-cache -fv
 }
 
+# --- rust toolchain (rustup.rs) ---
+
+# Installed via the official rustup.rs installer on every platform — including
+# mac — so rust is managed identically everywhere and `rustup update` can
+# self-update. (Homebrew's rustup build disables self-update, so it is
+# deliberately NOT in BREW_PACKAGES.) CARGO_HOME/RUSTUP_HOME are set explicitly
+# rather than relying on $HOME so the install lands in the target user's home
+# under `sudo -u` (vps route). --no-modify-path: our zshrc already sources
+# ~/.cargo/env, so the installer must not touch shell profiles.
+install_rust() {
+  local home_dir="$1"
+  local run_cmd="$2"
+
+  print_header "Install Rust (rustup)"
+
+  local cargo_home="$home_dir/.cargo"
+  local rustup_home="$home_dir/.rustup"
+
+  if [[ -x "$cargo_home/bin/rustup" ]]; then
+    echo "rustup already installed, skipping toolchain install."
+  else
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+      $run_cmd env CARGO_HOME="$cargo_home" RUSTUP_HOME="$rustup_home" \
+        sh -s -- -y --no-modify-path
+  fi
+
+  # rust-analyzer LSP component (required by LazyVim's Rust extra; the cargo
+  # shim at ~/.cargo/bin/rust-analyzer errors without it). Idempotent — no-op
+  # when already present. update.sh keeps it current on existing machines.
+  $run_cmd env CARGO_HOME="$cargo_home" RUSTUP_HOME="$rustup_home" \
+    "$cargo_home/bin/rustup" component add rust-analyzer
+}
+
 # --- shared functions ---
 
 setup_zsh_plugins() {
@@ -325,6 +358,7 @@ case "$PLATFORM" in
   mac)
     reset_shell "$HOME"
     setup_mac
+    install_rust "$HOME" ""
     setup_zsh_plugins "$HOME" ""
     clone_dotfiles "$HOME" ""
     echo "mac" > "$HOME/.dotfiles/.platform"
@@ -340,6 +374,7 @@ case "$PLATFORM" in
     harden_vps
     usermod -aG docker "$USERNAME"
     install_nerd_font "/home/$USERNAME" "sudo -u $USERNAME"
+    install_rust "/home/$USERNAME" "sudo -u $USERNAME"
     reset_shell "/home/$USERNAME"
     setup_zsh_plugins "/home/$USERNAME" "sudo -u $USERNAME"
     clone_dotfiles "/home/$USERNAME" "sudo -u $USERNAME"
@@ -368,6 +403,7 @@ case "$PLATFORM" in
   workstation)
     install_linux_packages "sudo"
     install_nerd_font "$HOME" ""
+    install_rust "$HOME" ""
     reset_shell "$HOME"
     setup_zsh_plugins "$HOME" ""
     clone_dotfiles "$HOME" ""

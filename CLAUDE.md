@@ -47,12 +47,13 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 Each platform case:
 1. Installs system packages and CLI tools. The package lists live in `lib/common.sh` (`APT_PACKAGES`, `BREW_PACKAGES`) as the single source of truth — `setup.sh` fetches that file via `curl` (before the repo is cloned) and installs from it, and `update.sh` reads it too, so a package added there reaches both fresh installs and existing machines. (On Linux the list includes fontconfig; `python3-venv`/`python3-pip` for Mason's pip-based tools like ruff; `xsel` as the system-clipboard provider. glow is separate on Linux — installed via the Charm apt repo, not the apt list. On Mac glow is in `BREW_PACKAGES`.)
 2. Installs JetBrains Mono Nerd Font (Homebrew cask on mac, downloaded from Nerd Fonts GitHub releases on Linux to `~/.local/share/fonts/`)
-3. Optionally resets existing shell config (interactive prompt, skip with `-y`)
-4. Installs zsh plugins (zsh-autosuggestions, zsh-syntax-highlighting) to `~/.zsh/`
-5. Clones this repo to `~/.dotfiles`
-6. Writes a `.platform` marker file (e.g. `echo "mac" > ~/.dotfiles/.platform`)
-7. Runs `install.sh` to symlink everything
-8. Sets zsh as default shell
+3. Installs Rust via the official rustup.rs installer, plus the `rust-analyzer` component (mac, vps, workstation — **not** proxmox). Skipped if `~/.cargo/bin/rustup` already exists. See the Rust toolchain convention below.
+4. Optionally resets existing shell config (interactive prompt, skip with `-y`)
+5. Installs zsh plugins (zsh-autosuggestions, zsh-syntax-highlighting) to `~/.zsh/`
+6. Clones this repo to `~/.dotfiles`
+7. Writes a `.platform` marker file (e.g. `echo "mac" > ~/.dotfiles/.platform`)
+8. Runs `install.sh` to symlink everything
+9. Sets zsh as default shell
 
 VPS route additionally: installs Docker Engine (via Docker's official apt repository), creates a `deploy` user with passwordless sudo and `docker` group membership, copies root's SSH keys, disables root SSH login, enables ufw firewall.
 
@@ -104,7 +105,8 @@ Steps:
 - **Liminal Salt everywhere**: Starship, tmux, Ghostty, and Neovim all use the Liminal Salt palette.
 - **Font**: JetBrains Mono Nerd Font in Ghostty (provides powerline glyphs, icons, and coding ligatures). Installed automatically by `setup.sh` and verified by `update.sh`. On Windows, the font is set manually in Windows Terminal's settings.
 - **Symlinks, not copies**: All configs are symlinked so `git pull` in `~/.dotfiles` immediately updates the live config.
-- **One place to add a tool**: Package lists live only in `lib/common.sh`. Add a package there (`APT_PACKAGES` or `BREW_PACKAGES`) and both `setup.sh` (fresh installs) and `dotup` (existing machines, via the idempotent ensure-install step) pick it up — never re-declare a package list inside `setup.sh` or `update.sh`. Tools that aren't plain apt/brew packages (neovim, lazygit, starship, glow-on-Linux, the Nerd Font) have their own install/version-check logic in both scripts.
+- **One place to add a tool**: Package lists live only in `lib/common.sh`. Add a package there (`APT_PACKAGES` or `BREW_PACKAGES`) and both `setup.sh` (fresh installs) and `dotup` (existing machines, via the idempotent ensure-install step) pick it up — never re-declare a package list inside `setup.sh` or `update.sh`. Tools that aren't plain apt/brew packages (neovim, lazygit, starship, glow-on-Linux, the Nerd Font, Rust) have their own install/version-check logic in both scripts.
+- **Rust toolchain**: Installed via the official rustup.rs installer (`install_rust` in `setup.sh`) on mac, vps, and workstation — proxmox is a host, not a dev box, so it's excluded. Rustup.rs is used on **mac too**, not Homebrew's `rustup`: brew's build disables `rustup self update`, which `update.sh`'s cross-platform block relies on. So `rustup` is deliberately absent from `BREW_PACKAGES` — adding it there reintroduces the collision (brew's `rustup` replaces `rustup-init` and orphans the `~/.cargo/bin` shims). The installer runs with `--no-modify-path` (zshrc already sources `~/.cargo/env`) and explicit `CARGO_HOME`/`RUSTUP_HOME` so the vps route's `sudo -u deploy` install lands in the `deploy` user's home. `update.sh` keeps the toolchain and `rust-analyzer` component current thereafter.
 - **Directory symlinks use `ln -sfn`**: Prevents `ln -sf` from creating a nested symlink inside the target on re-runs (e.g. ghostty).
 - **LazyVim plugin overrides**: Files in `nvim/lua/plugins/` are symlinked into the LazyVim starter's plugin directory. Lazy.nvim auto-installs any plugins referenced in these specs. Plugins are synced headlessly during `dotup`.
 - **System clipboard**: Neovim yanks reach the OS clipboard in every environment. Over SSH, Neovim's built-in OSC 52 provider emits the sequence and tmux forwards it to the outer terminal (`set -g set-clipboard on` in `tmux.conf`); LazyVim leaves `clipboard` empty under SSH, so `nvim/lua/plugins/clipboard.lua` maps `<leader>y`/`<leader>Y` to the `+` register for explicit copy-out. On desktop/WSL, `xsel` (installed by `setup.sh`, needs an X server — WSLg on WSL) is auto-detected as the provider. Never hand-roll `vim.g.clipboard` — it races LazyVim's lazy-clipboard save/restore; install a provider tool instead.
