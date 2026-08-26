@@ -92,7 +92,7 @@ Output is minimal, with colored status indicators (`✓` up to date, `→` updat
 
 ## Private OpenCode configuration
 
-Setup and `dotup` sync `git@github.com:irvj/dotfiles-private.git` using the machine's normal SSH authentication. The repository is cloned to `~/.local/share/opencode/private/` and is not part of this public repository.
+Setup and `dotup` sync `git@github.com:irvj/dotfiles-private.git` using the machine's normal SSH authentication. The repository is cloned to `~/.local/share/opencode/private/` and is not part of this public repository. If it has not been created yet, setup and updates print the Git error and continue without the private layer; other sync failures remain fatal.
 
 Expected contents can include:
 

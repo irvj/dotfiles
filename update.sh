@@ -108,7 +108,9 @@ if ! PRIVATE_OUTPUT=$("$DOTFILES/opencode/sync-private.sh" 2>&1); then
   echo "$PRIVATE_OUTPUT"
   exit 1
 fi
-if [[ "$PRIVATE_OUTPUT" == *"updated" || "$PRIVATE_OUTPUT" == *"cloned" ]]; then
+if [[ "$PRIVATE_OUTPUT" == *"unavailable"* ]]; then
+  error "$PRIVATE_OUTPUT"
+elif [[ "$PRIVATE_OUTPUT" == *"updated" || "$PRIVATE_OUTPUT" == *"cloned" ]]; then
   info "$PRIVATE_OUTPUT"
 else
   success "$PRIVATE_OUTPUT"

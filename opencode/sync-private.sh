@@ -23,6 +23,10 @@ elif [[ -e "$PRIVATE_DIR" ]]; then
 else
   mkdir -p "$(dirname "$PRIVATE_DIR")"
   if ! CLONE_OUTPUT=$(git clone --quiet "$PRIVATE_REPO" "$PRIVATE_DIR" 2>&1); then
+    if [[ "$CLONE_OUTPUT" =~ [Rr]epository[[:space:]]not[[:space:]]found|[Rr]epository[[:space:]]does[[:space:]]not[[:space:]]exist ]]; then
+      echo "private OpenCode config unavailable: $CLONE_OUTPUT"
+      exit 0
+    fi
     echo "$CLONE_OUTPUT" >&2
     exit 1
   fi
