@@ -3,6 +3,25 @@ set -e
 
 PRIVATE_REPO="${DOTFILES_PRIVATE_REPO:-git@github.com:irvj/dotfiles-private.git}"
 PRIVATE_DIR="${DOTFILES_PRIVATE_DIR:-$HOME/.local/share/opencode/private}"
+SKILLS_DEST="$HOME/.local/share/opencode/skills/private"
+
+# Materialize the private repo's skills into the skills directory registered in
+# opencode.json. The checkout is the source; ~/.local/share/opencode/skills is
+# the destination, the same split update-skills.sh uses for frontend-design.
+#
+# Everything private lands under a single `private/` subdirectory so its
+# provenance is the location itself: the wipe below can prune skills deleted
+# upstream without tracking what was copied. opencode scans skills paths
+# recursively for **/SKILL.md, so the extra nesting level still resolves.
+install_private_skills() {
+  local src="$PRIVATE_DIR/opencode/skills"
+
+  rm -rf "$SKILLS_DEST"
+  if [[ -d "$src" ]]; then
+    mkdir -p "$SKILLS_DEST"
+    cp -R "$src/." "$SKILLS_DEST/"
+  fi
+}
 
 if [[ -d "$PRIVATE_DIR/.git" ]]; then
   BEFORE=$(git -C "$PRIVATE_DIR" rev-parse HEAD)
@@ -13,9 +32,9 @@ if [[ -d "$PRIVATE_DIR/.git" ]]; then
 
   AFTER=$(git -C "$PRIVATE_DIR" rev-parse HEAD)
   if [[ "$BEFORE" == "$AFTER" ]]; then
-    echo "private dotfiles up to date"
+    STATUS="private dotfiles up to date"
   else
-    echo "private dotfiles updated"
+    STATUS="private dotfiles updated"
   fi
 elif [[ -e "$PRIVATE_DIR" ]]; then
   echo "Error: private dotfiles path exists but is not a Git repository: $PRIVATE_DIR" >&2
@@ -30,5 +49,10 @@ else
     echo "$CLONE_OUTPUT" >&2
     exit 1
   fi
-  echo "private dotfiles cloned"
+  STATUS="private dotfiles cloned"
 fi
+
+# runs after the checkout is current, so the copy reflects this run's pull
+install_private_skills
+
+echo "$STATUS"
