@@ -20,7 +20,8 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 │   ├── opencode.json           # Registers the machine-local skill directory
 │   ├── tui.json                # Selects the Liminal Salt OpenCode theme
 │   ├── themes/liminal-salt.json # Liminal Salt OpenCode theme
-│   └── update-skills.sh        # Fetches current external OpenCode skills
+│   ├── update-skills.sh        # Fetches current external OpenCode skills
+│   └── sync-private.sh         # Syncs the private dotfiles repository
 ├── windows-terminal/liminal-salt.json  # Windows Terminal color scheme fragment (Liminal Salt); manual drop-in, not symlinked
 └── nvim/                     # LazyVim overrides (symlinked into ~/.config/nvim)
     ├── colors/               # Entry points: liminal-salt-dark.lua, liminal-salt-light.lua
@@ -106,6 +107,7 @@ Steps:
 
 **Cross-platform (runs after the platform block):**
 - Fetches Anthropic's current `frontend-design` skill into `~/.local/share/opencode/skills/`.
+- Syncs `git@github.com:irvj/dotfiles-private.git` into `~/.local/share/opencode/private/`.
 - Runs `opencode upgrade`, or installs OpenCode if it is missing, and reports its version.
 - If `rustup` is on PATH, runs `rustup update` (reported only when a toolchain actually changes) and ensures the `rust-analyzer` component is installed (required by LazyVim's Rust extra; the cargo shim at `~/.cargo/bin/rust-analyzer` errors without it). Silent when already current — only reports on change or failure. No-op when rustup isn't installed.
 
@@ -121,6 +123,7 @@ Steps:
 - **System clipboard**: Neovim yanks reach the OS clipboard in every environment. Over SSH, Neovim's built-in OSC 52 provider emits the sequence and tmux forwards it to the outer terminal (`set -g set-clipboard on` in `tmux.conf`); LazyVim leaves `clipboard` empty under SSH, so `nvim/lua/plugins/clipboard.lua` maps `<leader>y`/`<leader>Y` to the `+` register for explicit copy-out. On desktop/WSL, `xsel` (installed by `setup.sh`, needs an X server — WSLg on WSL) is auto-detected as the provider. Never hand-roll `vim.g.clipboard` — it races LazyVim's lazy-clipboard save/restore; install a provider tool instead.
 - **PHP LSP noise**: `nvim/lua/plugins/php.lua` disables phpcs linting for PHP and configures phpactor (the LazyVim-default PHP LSP) to ignore `worse.undefined_variable` (stray `$this` in include files) and to not surface phpcs/php-cs-fixer diagnostics — while keeping real cross-class diagnostics.
 - **`.platform` file**: Written by `setup.sh`, read by `update.sh`, listed in `.gitignore`. If missing, `update.sh` prompts the user to select their platform. Can be re-selected with `dotup -p`.
+- **Private OpenCode config**: `opencode/sync-private.sh` clones or fast-forwards `git@github.com:irvj/dotfiles-private.git` to `~/.local/share/opencode/private/` using SSH. `zshrc` loads `opencode.local.json` from that checkout through `OPENCODE_CONFIG`; override the repository or path with `DOTFILES_PRIVATE_REPO` or `DOTFILES_PRIVATE_DIR`.
 - **Local git identity**: `gitconfig` includes `~/.gitconfig.local` for machine-specific `[user]` name/email (not tracked in the repo).
 - **Windows (Windows Terminal)**: No setup script for Windows. The terminal environment runs inside WSL — run the `workstation` route in the WSL distro. The Liminal Salt color scheme ships as a Windows Terminal fragment (`windows-terminal/liminal-salt.json`, palette mirrored from `ghostty/config`): dropped into `%LOCALAPPDATA%\Microsoft\Windows Terminal\Fragments\liminal-salt\`, it auto-loads into the scheme dropdown. Selecting the scheme and setting JetBrains Mono Nerd Font are done manually in Windows Terminal's settings; the font must be installed on Windows.
 

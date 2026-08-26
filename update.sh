@@ -101,6 +101,19 @@ else
   success "$SKILL_OUTPUT"
 fi
 
+# --- sync private dotfiles ---
+
+if ! PRIVATE_OUTPUT=$("$DOTFILES/opencode/sync-private.sh" 2>&1); then
+  error "private dotfiles sync failed"
+  echo "$PRIVATE_OUTPUT"
+  exit 1
+fi
+if [[ "$PRIVATE_OUTPUT" == *"updated" || "$PRIVATE_OUTPUT" == *"cloned" ]]; then
+  info "$PRIVATE_OUTPUT"
+else
+  success "$PRIVATE_OUTPUT"
+fi
+
 # --- update lazyvim plugins ---
 
 if ! LAZY_OUTPUT=$(nvim --headless "+Lazy! sync" +qa 2>&1); then

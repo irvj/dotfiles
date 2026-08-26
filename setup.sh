@@ -369,6 +369,15 @@ update_opencode_skills() {
   $run_cmd "$home_dir/.dotfiles/opencode/update-skills.sh"
 }
 
+sync_private_dotfiles() {
+  local home_dir="$1"
+  local run_cmd="$2"
+
+  print_header "Sync private dotfiles"
+
+  $run_cmd "$home_dir/.dotfiles/opencode/sync-private.sh"
+}
+
 remind_git_identity() {
   local home_dir="$1"
 
@@ -394,6 +403,7 @@ case "$PLATFORM" in
     setup_zsh_plugins "$HOME" ""
     clone_dotfiles "$HOME" ""
     echo "mac" > "$HOME/.dotfiles/.platform"
+    sync_private_dotfiles "$HOME" ""
     run_install "$HOME" ""
     update_opencode_skills "$HOME" ""
 
@@ -413,6 +423,7 @@ case "$PLATFORM" in
     setup_zsh_plugins "/home/$USERNAME" "sudo -u $USERNAME"
     clone_dotfiles "/home/$USERNAME" "sudo -u $USERNAME"
     echo "vps" > "/home/$USERNAME/.dotfiles/.platform"
+    sync_private_dotfiles "/home/$USERNAME" "sudo -u $USERNAME"
     run_install "/home/$USERNAME" "sudo -u $USERNAME"
     update_opencode_skills "/home/$USERNAME" "sudo -u $USERNAME"
     chsh -s "$(which zsh)" "$USERNAME"
@@ -429,6 +440,7 @@ case "$PLATFORM" in
     setup_zsh_plugins "/root" ""
     clone_dotfiles "/root" ""
     echo "proxmox" > "/root/.dotfiles/.platform"
+    sync_private_dotfiles "/root" ""
     run_install "/root" ""
     update_opencode_skills "/root" ""
     chsh -s "$(which zsh)" root
@@ -446,6 +458,7 @@ case "$PLATFORM" in
     setup_zsh_plugins "$HOME" ""
     clone_dotfiles "$HOME" ""
     echo "workstation" > "$HOME/.dotfiles/.platform"
+    sync_private_dotfiles "$HOME" ""
     run_install "$HOME" ""
     update_opencode_skills "$HOME" ""
     sudo chsh -s "$(which zsh)" "$USER"

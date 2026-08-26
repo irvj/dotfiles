@@ -74,6 +74,7 @@ Regardless of route, setup installs the same environment:
 - **Global OpenCode instructions** — `opencode/` is symlinked to `~/.config/opencode` and its `AGENTS.md` applies across repositories
 - **OpenCode theme** — `tui.json` selects the tracked Liminal Salt theme for the OpenCode TUI
 - **OpenCode skills** — `dotup` fetches Anthropic's current `frontend-design` skill into `~/.local/share/opencode/skills/`
+- **Private OpenCode configuration** — an SSH-authenticated `dotfiles-private` repository is synced to `~/.local/share/opencode/private/` when provisioned or updated
 - **Neovim system-clipboard yank** (`<leader>y` / `<leader>Y`) — OSC 52 forwarded by tmux over SSH, `xsel` on desktop/WSL
 
 ## Updating
@@ -88,6 +89,24 @@ Run `dotup` from any shell. It brings the machine up to date with whatever its r
 Interactive Linux package-configuration prompts remain visible during `dotup`; routine package output stays suppressed.
 
 Output is minimal, with colored status indicators (`✓` up to date, `→` updating, `✗` error). Re-select the platform with `dotup -p` or `dotup --platform`.
+
+## Private OpenCode configuration
+
+Setup and `dotup` sync `git@github.com:irvj/dotfiles-private.git` using the machine's normal SSH authentication. The repository is cloned to `~/.local/share/opencode/private/` and is not part of this public repository.
+
+Expected contents can include:
+
+```text
+dotfiles-private/
+├── opencode.local.json
+├── instructions/
+│   └── voice.md
+└── skills/
+    └── private-skill/
+        └── SKILL.md
+```
+
+When `opencode.local.json` exists, `zshrc` exposes it through `OPENCODE_CONFIG`. Set `DOTFILES_PRIVATE_REPO` or `DOTFILES_PRIVATE_DIR` to override the default repository or local path.
 
 ## Options
 
