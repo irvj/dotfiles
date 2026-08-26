@@ -17,10 +17,10 @@ if [[ -z "$TZ" ]]; then
   fi
 fi
 
-# --- private OpenCode config ---
+# --- private dotfiles ---
 
-if [[ -z "$OPENCODE_CONFIG" && -f "$HOME/.local/share/opencode/private/opencode.local.json" ]]; then
-  export OPENCODE_CONFIG="$HOME/.local/share/opencode/private/opencode.local.json"
+if [[ -z "$OPENCODE_CONFIG" && -f "$HOME/.local/share/opencode/private/opencode/opencode.local.json" ]]; then
+  export OPENCODE_CONFIG="$HOME/.local/share/opencode/private/opencode/opencode.local.json"
 fi
 
 # --- homebrew (mac only) ---

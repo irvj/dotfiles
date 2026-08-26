@@ -74,7 +74,7 @@ Regardless of route, setup installs the same environment:
 - **Global OpenCode instructions** — `opencode/` is symlinked to `~/.config/opencode` and its `AGENTS.md` applies across repositories
 - **OpenCode theme** — `tui.json` selects the tracked Liminal Salt theme for the OpenCode TUI
 - **OpenCode skills** — `dotup` fetches Anthropic's current `frontend-design` skill into `~/.local/share/opencode/skills/`
-- **Private OpenCode configuration** — an SSH-authenticated `dotfiles-private` repository is synced to `~/.local/share/opencode/private/` when provisioned or updated
+- **Private dotfiles** — an SSH-authenticated `dotfiles-private` repository is synced to `~/.local/share/opencode/private/` when provisioned or updated
 - **Neovim system-clipboard yank** (`<leader>y` / `<leader>Y`) — OSC 52 forwarded by tmux over SSH, `xsel` on desktop/WSL
 
 ## Updating
@@ -98,15 +98,16 @@ Expected contents can include:
 
 ```text
 dotfiles-private/
-├── opencode.local.json
-├── instructions/
-│   └── voice.md
-└── skills/
-    └── private-skill/
-        └── SKILL.md
+└── opencode/
+    ├── opencode.local.json
+    ├── instructions/
+    │   └── voice.md
+    └── skills/
+        └── private-skill/
+            └── SKILL.md
 ```
 
-When `opencode.local.json` exists, `zshrc` exposes it through `OPENCODE_CONFIG`. Set `DOTFILES_PRIVATE_REPO` or `DOTFILES_PRIVATE_DIR` to override the default repository or local path.
+When `opencode/opencode.local.json` exists, `zshrc` exposes it through `OPENCODE_CONFIG`. Future private integrations should use their own top-level directory. Set `DOTFILES_PRIVATE_REPO` or `DOTFILES_PRIVATE_DIR` to override the default repository or local path.
 
 ## Options
 
