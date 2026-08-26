@@ -360,6 +360,15 @@ run_install() {
   $run_cmd "$home_dir/.dotfiles/install.sh"
 }
 
+update_opencode_skills() {
+  local home_dir="$1"
+  local run_cmd="$2"
+
+  print_header "Update OpenCode skills"
+
+  $run_cmd "$home_dir/.dotfiles/opencode/update-skills.sh"
+}
+
 remind_git_identity() {
   local home_dir="$1"
 
@@ -386,6 +395,7 @@ case "$PLATFORM" in
     clone_dotfiles "$HOME" ""
     echo "mac" > "$HOME/.dotfiles/.platform"
     run_install "$HOME" ""
+    update_opencode_skills "$HOME" ""
 
     remind_git_identity "$HOME"
     print_header "Done. Restart your terminal."
@@ -404,6 +414,7 @@ case "$PLATFORM" in
     clone_dotfiles "/home/$USERNAME" "sudo -u $USERNAME"
     echo "vps" > "/home/$USERNAME/.dotfiles/.platform"
     run_install "/home/$USERNAME" "sudo -u $USERNAME"
+    update_opencode_skills "/home/$USERNAME" "sudo -u $USERNAME"
     chsh -s "$(which zsh)" "$USERNAME"
 
     remind_git_identity "/home/$USERNAME"
@@ -419,6 +430,7 @@ case "$PLATFORM" in
     clone_dotfiles "/root" ""
     echo "proxmox" > "/root/.dotfiles/.platform"
     run_install "/root" ""
+    update_opencode_skills "/root" ""
     chsh -s "$(which zsh)" root
 
     remind_git_identity "/root"
@@ -435,6 +447,7 @@ case "$PLATFORM" in
     clone_dotfiles "$HOME" ""
     echo "workstation" > "$HOME/.dotfiles/.platform"
     run_install "$HOME" ""
+    update_opencode_skills "$HOME" ""
     sudo chsh -s "$(which zsh)" "$USER"
 
     remind_git_identity "$HOME"

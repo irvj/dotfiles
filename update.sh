@@ -88,6 +88,19 @@ source "$DOTFILES/lib/common.sh"
 "$DOTFILES/install.sh" > /dev/null
 success "configs symlinked"
 
+# --- update external OpenCode skills ---
+
+if ! SKILL_OUTPUT=$("$DOTFILES/opencode/update-skills.sh" 2>&1); then
+  error "OpenCode skill update failed"
+  echo "$SKILL_OUTPUT"
+  exit 1
+fi
+if [[ "$SKILL_OUTPUT" == *"updated" ]]; then
+  info "$SKILL_OUTPUT"
+else
+  success "$SKILL_OUTPUT"
+fi
+
 # --- update lazyvim plugins ---
 
 if ! LAZY_OUTPUT=$(nvim --headless "+Lazy! sync" +qa 2>&1); then

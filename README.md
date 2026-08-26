@@ -72,6 +72,7 @@ Regardless of route, setup installs the same environment:
 - **JetBrains Mono Nerd Font** (powerline glyphs, icons, coding ligatures)
 - **Symlinked configs** — `zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`, plus the Neovim/LazyVim overrides
 - **Global OpenCode instructions** — `opencode/` is symlinked to `~/.config/opencode` and its `AGENTS.md` applies across repositories
+- **OpenCode skills** — `dotup` fetches Anthropic's current `frontend-design` skill into `~/.local/share/opencode/skills/`
 - **Neovim system-clipboard yank** (`<leader>y` / `<leader>Y`) — OSC 52 forwarded by tmux over SSH, `xsel` on desktop/WSL
 
 ## Updating

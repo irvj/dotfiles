@@ -15,7 +15,10 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 ├── gitconfig                 # Git config (aliases, rebase pull, includes local identity)
 ├── starship.toml             # Starship prompt (powerline segments, Liminal Salt palette)
 ├── ghostty/config            # Ghostty terminal (Liminal Salt theme, JetBrains Mono Nerd Font)
-├── opencode/AGENTS.md        # Global OpenCode workflow and style instructions
+├── opencode/                   # Global OpenCode config, rules, and skills
+│   ├── AGENTS.md               # Global OpenCode workflow and style instructions
+│   ├── opencode.json           # Registers the machine-local skill directory
+│   └── update-skills.sh        # Fetches current external OpenCode skills
 ├── windows-terminal/liminal-salt.json  # Windows Terminal color scheme fragment (Liminal Salt); manual drop-in, not symlinked
 └── nvim/                     # LazyVim overrides (symlinked into ~/.config/nvim)
     ├── colors/               # Entry points: liminal-salt-dark.lua, liminal-salt-light.lua
@@ -100,6 +103,7 @@ Steps:
 - Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/` if missing (checks for font files directly, no dependency on fontconfig)
 
 **Cross-platform (runs after the platform block):**
+- Fetches Anthropic's current `frontend-design` skill into `~/.local/share/opencode/skills/`.
 - Runs `opencode upgrade`, or installs OpenCode if it is missing, and reports its version.
 - If `rustup` is on PATH, runs `rustup update` (reported only when a toolchain actually changes) and ensures the `rust-analyzer` component is installed (required by LazyVim's Rust extra; the cargo shim at `~/.cargo/bin/rust-analyzer` errors without it). Silent when already current — only reports on change or failure. No-op when rustup isn't installed.
 
