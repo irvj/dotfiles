@@ -46,7 +46,7 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 | `workstation` | normal user  | apt (with sudo) | no        | no           |
 
 Each platform case:
-1. Installs system packages and CLI tools. The package lists live in `lib/common.sh` (`APT_PACKAGES`, `BREW_PACKAGES`) as the single source of truth — `setup.sh` fetches that file via `curl` (before the repo is cloned) and installs from it, and `update.sh` reads it too, so a package added there reaches both fresh installs and existing machines. (On Linux the list includes fontconfig; `python3-venv`/`python3-pip` for Mason's pip-based tools like ruff; `xsel` as the system-clipboard provider. glow is separate on Linux — installed via the Charm apt repo, not the apt list. On Mac glow is in `BREW_PACKAGES`.)
+1. Installs system packages and CLI tools. The package lists live in `lib/common.sh` (`APT_PACKAGES`, `BREW_PACKAGES`) as the single source of truth — `setup.sh` fetches that file via `curl` (before the repo is cloned) and installs from it, and `update.sh` reads it too, so a package added there reaches both fresh installs and existing machines. (On Linux the list includes fontconfig; `python3-venv`/`python3-pip` for Mason's pip-based tools like ruff; `xsel` as the system-clipboard provider. glow is separate on Linux — installed via the Charm apt repo, not the apt list. On Mac glow is in `BREW_PACKAGES`; OpenCode is installed separately from its Homebrew tap or upstream installer.)
 2. Installs JetBrains Mono Nerd Font (Homebrew cask on mac, downloaded from Nerd Fonts GitHub releases on Linux to `~/.local/share/fonts/`)
 3. Installs Rust via the official rustup.rs installer, plus the `rust-analyzer` component (mac, vps, workstation — **not** proxmox). Skipped if `~/.cargo/bin/rustup` already exists. See the Rust toolchain convention below.
 4. Optionally resets existing shell config (interactive prompt, skip with `-y`)
@@ -100,6 +100,7 @@ Steps:
 - Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/` if missing (checks for font files directly, no dependency on fontconfig)
 
 **Cross-platform (runs after the platform block):**
+- Runs `opencode upgrade`, or installs OpenCode if it is missing, and reports its version.
 - If `rustup` is on PATH, runs `rustup update` (reported only when a toolchain actually changes) and ensures the `rust-analyzer` component is installed (required by LazyVim's Rust extra; the cargo shim at `~/.cargo/bin/rust-analyzer` errors without it). Silent when already current — only reports on change or failure. No-op when rustup isn't installed.
 
 ## Key conventions

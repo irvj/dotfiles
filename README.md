@@ -66,7 +66,7 @@ Then, in **Settings → Profiles → Defaults → Appearance**, set the color sc
 
 Regardless of route, setup installs the same environment:
 
-- **CLI toolchain** — git, tmux, ripgrep, fd, fzf, htop, neovim, lazygit, starship, [glow](https://github.com/charmbracelet/glow), and more. The exact apt/brew package names live in [`lib/common.sh`](lib/common.sh) (the single source of truth). On mac everything comes from Homebrew; on Linux the apt packages come from `apt`, neovim/lazygit/starship from their GitHub releases, and glow from the [Charm apt repo](https://repo.charm.sh).
+- **CLI toolchain** — git, tmux, ripgrep, fd, fzf, htop, neovim, lazygit, starship, [OpenCode](https://opencode.ai), [glow](https://github.com/charmbracelet/glow), and more. The exact apt/brew package names live in [`lib/common.sh`](lib/common.sh) (the single source of truth). On mac everything comes from Homebrew; on Linux the apt packages come from `apt`, neovim/lazygit/starship from their GitHub releases, OpenCode from its installer, and glow from the [Charm apt repo](https://repo.charm.sh).
 - **[LazyVim](https://www.lazyvim.org)** as the neovim config, with this repo's overrides layered on top
 - **Zsh** with [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions) and [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting), set as the default shell
 - **JetBrains Mono Nerd Font** (powerline glyphs, icons, coding ligatures)
@@ -80,7 +80,7 @@ Run `dotup` from any shell. It brings the machine up to date with whatever its r
 
 - **Dotfiles & configs** — pulls this repo, re-runs `install.sh` (re-symlinks everything), syncs LazyVim plugins, and updates the zsh plugins
 - **Packages** — upgrades all system packages (Homebrew or apt) and installs any newly-added ones from [`lib/common.sh`](lib/common.sh), so the declared set is always complete
-- **Pinned tools** — updates neovim, lazygit, and starship to the latest release (arch-aware: x86_64 or arm64) and installs the Nerd Font if missing
+- **Pinned tools** — updates neovim, lazygit, starship, and OpenCode to the latest release (arch-aware: x86_64 or arm64 where applicable) and installs the Nerd Font if missing
 - **Housekeeping** — recommends a reboot when the Linux kernel was updated, and runs `rustup update` when rustup is installed
 
 Output is minimal, with colored status indicators (`✓` up to date, `→` updating, `✗` error). Re-select the platform with `dotup -p` or `dotup --platform`.

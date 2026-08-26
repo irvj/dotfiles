@@ -286,6 +286,56 @@ case "$PLATFORM" in
     ;;
 esac
 
+# --- OpenCode ---
+
+update_opencode() {
+  local bin=""
+  local before
+  local after
+  local output
+
+  if command -v opencode &>/dev/null; then
+    bin=$(command -v opencode)
+  elif [[ -x "$HOME/.opencode/bin/opencode" ]]; then
+    bin="$HOME/.opencode/bin/opencode"
+  fi
+
+  if [[ -z "$bin" ]]; then
+    if [[ "$PLATFORM" == "mac" ]]; then
+      if ! BREW_OPENCODE_OUTPUT=$(brew install anomalyco/tap/opencode 2>&1); then
+        error "opencode install failed"
+        echo "$BREW_OPENCODE_OUTPUT"
+        exit 1
+      fi
+      bin=$(command -v opencode)
+    else
+      if ! curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path > /dev/null; then
+        error "opencode install failed"
+        exit 1
+      fi
+      bin="$HOME/.opencode/bin/opencode"
+    fi
+    success "opencode v$($bin --version) installed"
+    return
+  fi
+
+  before=$($bin --version 2>/dev/null || echo "none")
+  if ! output=$($bin upgrade 2>&1); then
+    error "opencode upgrade failed"
+    echo "$output"
+    exit 1
+  fi
+  after=$($bin --version 2>/dev/null || echo "none")
+
+  if [[ "$before" != "$after" ]]; then
+    info "opencode v$before → v$after"
+  else
+    success "opencode v$after"
+  fi
+}
+
+update_opencode
+
 # --- rust toolchain ---
 
 if command -v rustup &>/dev/null; then

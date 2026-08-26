@@ -35,7 +35,7 @@ export NVM_DIR="$HOME/.nvm"
 
 # --- path ---
 
-export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+export PATH="$HOME/.opencode/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
 
 # --- rust (cargo) ---
 

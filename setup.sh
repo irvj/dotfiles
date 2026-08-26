@@ -147,6 +147,28 @@ install_linux_packages() {
   $pkg_cmd apt install -y glow
 }
 
+# --- OpenCode install ---
+
+install_opencode() {
+  local home_dir="$1"
+  local run_cmd="$2"
+  local method="$3"
+  local version
+
+  print_header "Install OpenCode"
+
+  if [[ "$method" == "brew" ]]; then
+    brew install anomalyco/tap/opencode
+    version=$(opencode --version)
+  else
+    curl -fsSL https://opencode.ai/install | \
+      $run_cmd env HOME="$home_dir" bash -s -- --no-modify-path
+    version=$($run_cmd env HOME="$home_dir" "$home_dir/.opencode/bin/opencode" --version)
+  fi
+
+  echo "OpenCode v$version installed."
+}
+
 # --- docker install ---
 
 install_docker() {
@@ -358,6 +380,7 @@ case "$PLATFORM" in
   mac)
     reset_shell "$HOME"
     setup_mac
+    install_opencode "$HOME" "" "brew"
     install_rust "$HOME" ""
     setup_zsh_plugins "$HOME" ""
     clone_dotfiles "$HOME" ""
@@ -373,6 +396,7 @@ case "$PLATFORM" in
     install_docker
     harden_vps
     usermod -aG docker "$USERNAME"
+    install_opencode "/home/$USERNAME" "sudo -u $USERNAME" "curl"
     install_nerd_font "/home/$USERNAME" "sudo -u $USERNAME"
     install_rust "/home/$USERNAME" "sudo -u $USERNAME"
     reset_shell "/home/$USERNAME"
@@ -388,6 +412,7 @@ case "$PLATFORM" in
 
   proxmox)
     install_linux_packages ""
+    install_opencode "/root" "" "curl"
     install_nerd_font "/root" ""
     reset_shell "/root"
     setup_zsh_plugins "/root" ""
@@ -402,6 +427,7 @@ case "$PLATFORM" in
 
   workstation)
     install_linux_packages "sudo"
+    install_opencode "$HOME" "" "curl"
     install_nerd_font "$HOME" ""
     install_rust "$HOME" ""
     reset_shell "$HOME"
