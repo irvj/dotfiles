@@ -24,17 +24,41 @@ install_private_skills() {
 }
 
 if [[ -d "$PRIVATE_DIR/.git" ]]; then
-  BEFORE=$(git -C "$PRIVATE_DIR" rev-parse HEAD)
-  if ! PULL_OUTPUT=$(git -C "$PRIVATE_DIR" pull --ff-only --quiet 2>&1); then
-    echo "$PULL_OUTPUT" >&2
-    exit 1
-  fi
+  # A clone taken while the remote still had no commits leaves a valid .git
+  # with no HEAD. Both `rev-parse HEAD` and `pull --ff-only` fail there, so
+  # detect it and adopt the remote branch rather than trying to pull onto
+  # nothing.
+  # --verify --quiet prints nothing when HEAD is unresolvable; plain
+  # `rev-parse HEAD` echoes the literal "HEAD" to stdout on failure.
+  BEFORE=$(git -C "$PRIVATE_DIR" rev-parse --verify --quiet HEAD || true)
 
-  AFTER=$(git -C "$PRIVATE_DIR" rev-parse HEAD)
-  if [[ "$BEFORE" == "$AFTER" ]]; then
-    STATUS="private dotfiles up to date"
+  if [[ -z "$BEFORE" ]]; then
+    BRANCH=$(git -C "$PRIVATE_DIR" symbolic-ref --short HEAD 2>/dev/null || echo "main")
+    if ! FETCH_OUTPUT=$(git -C "$PRIVATE_DIR" fetch --quiet origin 2>&1); then
+      echo "$FETCH_OUTPUT" >&2
+      exit 1
+    fi
+    if ! git -C "$PRIVATE_DIR" rev-parse --verify --quiet "origin/$BRANCH" >/dev/null; then
+      echo "private dotfiles unavailable: remote has no commits yet"
+      exit 0
+    fi
+    if ! CHECKOUT_OUTPUT=$(git -C "$PRIVATE_DIR" checkout -q -B "$BRANCH" "origin/$BRANCH" 2>&1); then
+      echo "$CHECKOUT_OUTPUT" >&2
+      exit 1
+    fi
+    STATUS="private dotfiles cloned"
   else
-    STATUS="private dotfiles updated"
+    if ! PULL_OUTPUT=$(git -C "$PRIVATE_DIR" pull --ff-only --quiet 2>&1); then
+      echo "$PULL_OUTPUT" >&2
+      exit 1
+    fi
+
+    AFTER=$(git -C "$PRIVATE_DIR" rev-parse HEAD)
+    if [[ "$BEFORE" == "$AFTER" ]]; then
+      STATUS="private dotfiles up to date"
+    else
+      STATUS="private dotfiles updated"
+    fi
   fi
 elif [[ -e "$PRIVATE_DIR" ]]; then
   echo "Error: private dotfiles path exists but is not a Git repository: $PRIVATE_DIR" >&2
