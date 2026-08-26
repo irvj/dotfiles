@@ -18,6 +18,9 @@ if [[ -d ~/.config/opencode && ! -L ~/.config/opencode ]]; then
   # Preserve an existing OpenCode config directory and link only managed files.
   ln -sf $DOTFILES/opencode/AGENTS.md ~/.config/opencode/AGENTS.md
   ln -sf $DOTFILES/opencode/opencode.json ~/.config/opencode/opencode.json
+  ln -sf $DOTFILES/opencode/tui.json ~/.config/opencode/tui.json
+  mkdir -p ~/.config/opencode/themes
+  ln -sf $DOTFILES/opencode/themes/liminal-salt.json ~/.config/opencode/themes/liminal-salt.json
 else
   ln -sfn $DOTFILES/opencode ~/.config/opencode
 fi

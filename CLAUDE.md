@@ -18,6 +18,8 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 ├── opencode/                   # Global OpenCode config, rules, and skills
 │   ├── AGENTS.md               # Global OpenCode workflow and style instructions
 │   ├── opencode.json           # Registers the machine-local skill directory
+│   ├── tui.json                # Selects the Liminal Salt OpenCode theme
+│   ├── themes/liminal-salt.json # Liminal Salt OpenCode theme
 │   └── update-skills.sh        # Fetches current external OpenCode skills
 ├── windows-terminal/liminal-salt.json  # Windows Terminal color scheme fragment (Liminal Salt); manual drop-in, not symlinked
 └── nvim/                     # LazyVim overrides (symlinked into ~/.config/nvim)
