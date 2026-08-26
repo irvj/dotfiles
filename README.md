@@ -71,6 +71,7 @@ Regardless of route, setup installs the same environment:
 - **Zsh** with [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions) and [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting), set as the default shell
 - **JetBrains Mono Nerd Font** (powerline glyphs, icons, coding ligatures)
 - **Symlinked configs** — `zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`, plus the Neovim/LazyVim overrides
+- **Global OpenCode instructions** — `opencode/` is symlinked to `~/.config/opencode` and its `AGENTS.md` applies across repositories
 - **Neovim system-clipboard yank** (`<leader>y` / `<leader>Y`) — OSC 52 forwarded by tmux over SSH, `xsel` on desktop/WSL
 
 ## Updating

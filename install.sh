@@ -14,6 +14,7 @@ ln -sf $DOTFILES/tmux.conf ~/.tmux.conf
 ln -sf $DOTFILES/gitconfig ~/.gitconfig
 ln -sf $DOTFILES/starship.toml ~/.config/starship.toml
 ln -sfn $DOTFILES/ghostty ~/.config/ghostty
+ln -sfn $DOTFILES/opencode ~/.config/opencode
 
 # --- install lazyvim ---
 

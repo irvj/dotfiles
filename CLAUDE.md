@@ -15,6 +15,7 @@ Personal dotfiles and machine setup for macOS and Linux. One curl command provis
 ├── gitconfig                 # Git config (aliases, rebase pull, includes local identity)
 ├── starship.toml             # Starship prompt (powerline segments, Liminal Salt palette)
 ├── ghostty/config            # Ghostty terminal (Liminal Salt theme, JetBrains Mono Nerd Font)
+├── opencode/AGENTS.md        # Global OpenCode workflow and style instructions
 ├── windows-terminal/liminal-salt.json  # Windows Terminal color scheme fragment (Liminal Salt); manual drop-in, not symlinked
 └── nvim/                     # LazyVim overrides (symlinked into ~/.config/nvim)
     ├── colors/               # Entry points: liminal-salt-dark.lua, liminal-salt-light.lua
@@ -66,6 +67,7 @@ Creates symlinks from `~/.dotfiles/` into the home directory:
 - `gitconfig` → `~/.gitconfig`
 - `starship.toml` → `~/.config/starship.toml`
 - `ghostty/` → `~/.config/ghostty` (directory symlink, uses `ln -sfn`)
+- `opencode/` → `~/.config/opencode` (directory symlink, uses `ln -sfn`)
 
 Clones the LazyVim starter to `~/.config/nvim` if it doesn't exist (first install only), then symlinks all `nvim/colors/*.lua` files into the Neovim colors directory and all `nvim/lua/plugins/*.lua` files into the LazyVim plugins directory.
 
