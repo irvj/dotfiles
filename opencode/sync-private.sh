@@ -13,22 +13,22 @@ if [[ -d "$PRIVATE_DIR/.git" ]]; then
 
   AFTER=$(git -C "$PRIVATE_DIR" rev-parse HEAD)
   if [[ "$BEFORE" == "$AFTER" ]]; then
-    echo "private OpenCode config up to date"
+    echo "private dotfiles up to date"
   else
-    echo "private OpenCode config updated"
+    echo "private dotfiles updated"
   fi
 elif [[ -e "$PRIVATE_DIR" ]]; then
-  echo "Error: private OpenCode path exists but is not a Git repository: $PRIVATE_DIR" >&2
+  echo "Error: private dotfiles path exists but is not a Git repository: $PRIVATE_DIR" >&2
   exit 1
 else
   mkdir -p "$(dirname "$PRIVATE_DIR")"
   if ! CLONE_OUTPUT=$(git clone --quiet "$PRIVATE_REPO" "$PRIVATE_DIR" 2>&1); then
     if [[ "$CLONE_OUTPUT" =~ [Rr]epository[[:space:]]not[[:space:]]found|[Rr]epository[[:space:]]does[[:space:]]not[[:space:]]exist ]]; then
-      echo "private OpenCode config unavailable: $CLONE_OUTPUT"
+      echo "private dotfiles unavailable: $CLONE_OUTPUT"
       exit 0
     fi
     echo "$CLONE_OUTPUT" >&2
     exit 1
   fi
-  echo "private OpenCode config cloned"
+  echo "private dotfiles cloned"
 fi
