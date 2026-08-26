@@ -14,7 +14,13 @@ ln -sf $DOTFILES/tmux.conf ~/.tmux.conf
 ln -sf $DOTFILES/gitconfig ~/.gitconfig
 ln -sf $DOTFILES/starship.toml ~/.config/starship.toml
 ln -sfn $DOTFILES/ghostty ~/.config/ghostty
-ln -sfn $DOTFILES/opencode ~/.config/opencode
+if [[ -d ~/.config/opencode && ! -L ~/.config/opencode ]]; then
+  # Preserve an existing OpenCode config directory and link only managed files.
+  ln -sf $DOTFILES/opencode/AGENTS.md ~/.config/opencode/AGENTS.md
+  ln -sf $DOTFILES/opencode/opencode.json ~/.config/opencode/opencode.json
+else
+  ln -sfn $DOTFILES/opencode ~/.config/opencode
+fi
 
 # --- install lazyvim ---
 
