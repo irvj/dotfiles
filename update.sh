@@ -102,7 +102,11 @@ success "lazyvim plugins synced"
 ZSH_UPDATED=false
 for dir in "$HOME/.zsh"/*/; do
   if [[ -d "$dir/.git" ]]; then
-    PLUGIN_OUTPUT=$(git -C "$dir" pull)
+    if ! PLUGIN_OUTPUT=$(git -C "$dir" pull 2>&1); then
+      error "$(basename "$dir") update failed"
+      echo "$PLUGIN_OUTPUT"
+      exit 1
+    fi
     if [[ "$PLUGIN_OUTPUT" != "Already up to date." ]]; then
       ZSH_UPDATED=true
       info "$(basename "$dir") updated"
@@ -182,6 +186,13 @@ case "$PLATFORM" in
       SUDO="sudo"
     fi
 
+    # Keep normal apt output captured below, but leave stderr attached to the
+    # terminal so debconf dialog prompts remain visible and interactive.
+    APT_PROMPT_FD="/dev/null"
+    if [[ -t 1 && -r /dev/tty ]]; then
+      APT_PROMPT_FD="/dev/tty"
+    fi
+
     detect_arch || exit 1
 
     # add the Charm apt repo if glow is missing; the actual install happens
@@ -195,7 +206,7 @@ case "$PLATFORM" in
     fi
 
     # LC_ALL=C forces English apt output so the greps below stay reliable
-    if ! APT_OUTPUT=$($SUDO env LC_ALL=C apt-get update && $SUDO env LC_ALL=C apt-get upgrade -y 2>&1); then
+    if ! APT_OUTPUT=$($SUDO env LC_ALL=C apt-get update 2>"$APT_PROMPT_FD" && $SUDO env LC_ALL=C apt-get upgrade -y 2>"$APT_PROMPT_FD"); then
       error "system package update failed"
       echo "$APT_OUTPUT"
       exit 1
@@ -210,13 +221,13 @@ case "$PLATFORM" in
     fi
 
     if $GLOW_MISSING; then
-      $SUDO env LC_ALL=C apt-get install -y glow > /dev/null 2>&1
+      $SUDO env LC_ALL=C apt-get install -y glow > /dev/null 2>"$APT_PROMPT_FD"
       success "glow installed"
     fi
 
     # ensure every declared apt package is present (installs newly-added ones
     # on machines provisioned before the package was added; no-op otherwise)
-    if ! PKG_OUTPUT=$($SUDO env LC_ALL=C apt-get install -y "${APT_PACKAGES[@]}" 2>&1); then
+    if ! PKG_OUTPUT=$($SUDO env LC_ALL=C apt-get install -y "${APT_PACKAGES[@]}" 2>"$APT_PROMPT_FD"); then
       error "package install failed"
       echo "$PKG_OUTPUT"
       exit 1

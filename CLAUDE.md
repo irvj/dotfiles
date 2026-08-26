@@ -92,7 +92,7 @@ Steps:
 
 **Linux (vps/workstation/proxmox):**
 - Uses a `$SUDO` prefix (set for vps/workstation, empty for proxmox) to deduplicate the three Linux paths into one block
-- Runs `apt-get update && apt-get upgrade` (a single update; `LC_ALL=C` forces English output so the status greps stay reliable, output suppressed, shown on failure)
+- Runs `apt-get update && apt-get upgrade` (a single update; `LC_ALL=C` forces English output so the status greps stay reliable, normal output suppressed, and interactive debconf prompts remain visible)
 - Detects kernel updates (`linux-image` or `pve-kernel`) and recommends reboot
 - Runs `apt-get install -y "${APT_PACKAGES[@]}"` to ensure every declared package is present — this propagates newly-added packages to existing machines (no-op when all present)
 - Checks neovim, lazygit, and starship versions against latest GitHub releases; only downloads when a new version is available. Downloads are arch-aware (`detect_arch` maps `uname -m` to the neovim/lazygit asset names, x86_64 or arm64) and land in a `mktemp -d` scratch dir, not the cwd

@@ -83,6 +83,8 @@ Run `dotup` from any shell. It brings the machine up to date with whatever its r
 - **Pinned tools** — updates neovim, lazygit, starship, and OpenCode to the latest release (arch-aware: x86_64 or arm64 where applicable) and installs the Nerd Font if missing
 - **Housekeeping** — recommends a reboot when the Linux kernel was updated, and runs `rustup update` when rustup is installed
 
+Interactive Linux package-configuration prompts remain visible during `dotup`; routine package output stays suppressed.
+
 Output is minimal, with colored status indicators (`✓` up to date, `→` updating, `✗` error). Re-select the platform with `dotup -p` or `dotup --platform`.
 
 ## Options
