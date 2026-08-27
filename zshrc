@@ -19,7 +19,7 @@ fi
 
 # --- private dotfiles ---
 
-if [[ -z "$OPENCODE_CONFIG" && -f "$HOME/.local/share/opencode/private/opencode/env.zsh" ]]; then
+if [[ -f "$HOME/.local/share/opencode/private/opencode/env.zsh" ]]; then
   source "$HOME/.local/share/opencode/private/opencode/env.zsh"
 fi
 
