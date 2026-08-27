@@ -5,6 +5,11 @@ PRIVATE_REPO="${DOTFILES_PRIVATE_REPO:-git@github.com:irvj/dotfiles-private.git}
 PRIVATE_DIR="${DOTFILES_PRIVATE_DIR:-$HOME/.local/share/opencode/private}"
 SKILLS_DEST="$HOME/.local/share/opencode/skills/private"
 
+skip_unavailable() {
+  echo "private extension skipped"
+  exit 0
+}
+
 # Materialize the private repo's skills into the skills directory registered in
 # opencode.json. The checkout is the source; ~/.local/share/opencode/skills is
 # the destination, the same split update-skills.sh uses for frontend-design.
@@ -35,22 +40,18 @@ if [[ -d "$PRIVATE_DIR/.git" ]]; then
   if [[ -z "$BEFORE" ]]; then
     BRANCH=$(git -C "$PRIVATE_DIR" symbolic-ref --short HEAD 2>/dev/null || echo "main")
     if ! FETCH_OUTPUT=$(git -C "$PRIVATE_DIR" fetch --quiet origin 2>&1); then
-      echo "$FETCH_OUTPUT" >&2
-      exit 1
+      skip_unavailable
     fi
     if ! git -C "$PRIVATE_DIR" rev-parse --verify --quiet "origin/$BRANCH" >/dev/null; then
-      echo "private dotfiles unavailable: remote has no commits yet"
-      exit 0
+      skip_unavailable
     fi
     if ! CHECKOUT_OUTPUT=$(git -C "$PRIVATE_DIR" checkout -q -B "$BRANCH" "origin/$BRANCH" 2>&1); then
-      echo "$CHECKOUT_OUTPUT" >&2
-      exit 1
+      skip_unavailable
     fi
     STATUS="private dotfiles cloned"
   else
     if ! PULL_OUTPUT=$(git -C "$PRIVATE_DIR" pull --ff-only --quiet 2>&1); then
-      echo "$PULL_OUTPUT" >&2
-      exit 1
+      skip_unavailable
     fi
 
     AFTER=$(git -C "$PRIVATE_DIR" rev-parse HEAD)
@@ -61,17 +62,11 @@ if [[ -d "$PRIVATE_DIR/.git" ]]; then
     fi
   fi
 elif [[ -e "$PRIVATE_DIR" ]]; then
-  echo "Error: private dotfiles path exists but is not a Git repository: $PRIVATE_DIR" >&2
-  exit 1
+  skip_unavailable
 else
   mkdir -p "$(dirname "$PRIVATE_DIR")"
   if ! CLONE_OUTPUT=$(git clone --quiet "$PRIVATE_REPO" "$PRIVATE_DIR" 2>&1); then
-    if [[ "$CLONE_OUTPUT" =~ [Rr]epository[[:space:]]not[[:space:]]found|[Rr]epository[[:space:]]does[[:space:]]not[[:space:]]exist ]]; then
-      echo "private dotfiles unavailable: $CLONE_OUTPUT"
-      exit 0
-    fi
-    echo "$CLONE_OUTPUT" >&2
-    exit 1
+    skip_unavailable
   fi
   STATUS="private dotfiles cloned"
 fi
