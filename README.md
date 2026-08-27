@@ -92,22 +92,15 @@ Output is minimal, with colored status indicators (`✓` up to date, `→` updat
 
 ## Private dotfiles
 
-Setup and `dotup` sync `git@github.com:irvj/dotfiles-private.git` using the machine's normal SSH authentication. The repository is cloned to `~/.local/share/opencode/private/` and is not part of this public repository. If it has not been created yet, setup and updates print the Git error and continue without the private layer; other sync failures remain fatal.
+Setup and `dotup` sync `git@github.com:irvj/dotfiles-private.git` using the machine's normal SSH authentication. The repository is cloned to `~/.local/share/opencode/private/` and is not part of this public repository. Its contents are personal and are not documented here. If it has not been created yet, setup and updates print the Git error and continue without the private layer; other sync failures remain fatal.
 
-Expected contents can include:
+What this repository defines is only how that private layer is loaded:
 
-```text
-dotfiles-private/
-└── opencode/
-    ├── opencode.local.json
-    ├── instructions/
-    │   └── voice.md
-    └── skills/
-        └── private-skill/
-            └── SKILL.md
-```
+- `opencode/opencode.local.json`, when present, is exposed through `OPENCODE_CONFIG` by `zshrc`. OpenCode merges it over the global config rather than replacing it.
+- Any skills the repository provides are installed into `~/.local/share/opencode/skills/private/`, which is removed and re-copied on every sync — edit them in the private repository, not in place.
+- Each integration lives in its own top-level directory, so adding one needs no change here.
 
-When `opencode/opencode.local.json` exists, `zshrc` exposes it through `OPENCODE_CONFIG`. Future private integrations should use their own top-level directory. Set `DOTFILES_PRIVATE_REPO` or `DOTFILES_PRIVATE_DIR` to override the default repository or local path.
+Set `DOTFILES_PRIVATE_REPO` or `DOTFILES_PRIVATE_DIR` to override the default repository or local path.
 
 ## Options
 
