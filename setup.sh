@@ -145,6 +145,31 @@ install_linux_packages() {
   echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | $pkg_cmd tee /etc/apt/sources.list.d/charm.list > /dev/null
   $pkg_cmd apt update
   $pkg_cmd apt install -y glow
+
+  install_newsboat "$pkg_cmd"
+}
+
+# --- newsboat install (snap) ---
+
+# newsboat ships no prebuilt binaries and its apt build trails upstream badly,
+# so it comes from the maintainer's own snap (see lib/common.sh). snapd was
+# just installed with the declared packages, so its socket may not be up yet;
+# `snap wait` blocks until seeding finishes rather than racing it. Snap is
+# unavailable in some containers (notably LXC), and newsboat is not essential
+# to the environment, so a failure here must not abort provisioning.
+install_newsboat() {
+  local pkg_cmd="$1"
+
+  print_header "Install newsboat"
+
+  $pkg_cmd systemctl enable --now snapd.socket > /dev/null 2>&1 || true
+  $pkg_cmd snap wait system seed.loaded > /dev/null 2>&1 || true
+
+  if $pkg_cmd snap install newsboat; then
+    echo "newsboat installed."
+  else
+    echo "Warning: newsboat snap install failed (snapd unavailable?). Skipping."
+  fi
 }
 
 # --- OpenCode install ---

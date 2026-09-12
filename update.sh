@@ -27,6 +27,9 @@ success() { echo -e "${GREEN}✓${NC} $1"; }
 info()    { echo -e "${YELLOW}→${NC} $1"; }
 error()   { echo -e "${RED}✗${NC} $1"; }
 
+# Second column of `snap list` is the version; empty when the snap is absent.
+snap_version() { snap list "$1" 2>/dev/null | awk 'NR==2 {print $2}'; }
+
 # --- read platform ---
 
 if [[ ! -f "$PLATFORM_FILE" ]] || $RESET_PLATFORM; then
@@ -264,6 +267,37 @@ case "$PLATFORM" in
       success "declared packages present"
     else
       info "installed missing packages"
+    fi
+
+    # newsboat comes from the snap store (see lib/common.sh). snapd refreshes
+    # snaps on its own schedule; refreshing here only pulls that forward so a
+    # dotup run leaves nothing pending. Snap is unavailable in some containers
+    # (notably LXC), so a failure must not abort the update.
+    if ! command -v snap &>/dev/null; then
+      error "snap unavailable, skipping newsboat"
+    elif [[ -z "$(snap_version newsboat)" ]]; then
+      # snapd may have been installed by the apt step just above (existing
+      # machines predate it), so its socket may not be up yet; wait for seeding
+      # rather than racing it.
+      $SUDO snap wait system seed.loaded > /dev/null 2>&1 || true
+      if $SUDO snap install newsboat > /dev/null 2>&1; then
+        success "newsboat installed"
+      else
+        error "newsboat install failed"
+      fi
+    else
+      NEWSBOAT_BEFORE=$(snap_version newsboat)
+      if ! SNAP_OUTPUT=$($SUDO snap refresh newsboat 2>&1); then
+        error "newsboat refresh failed"
+        echo "$SNAP_OUTPUT"
+      else
+        NEWSBOAT_AFTER=$(snap_version newsboat)
+        if [[ "$NEWSBOAT_BEFORE" != "$NEWSBOAT_AFTER" ]]; then
+          info "newsboat $NEWSBOAT_BEFORE → $NEWSBOAT_AFTER"
+        else
+          success "newsboat $NEWSBOAT_AFTER"
+        fi
+      fi
     fi
 
     NVIM_LATEST=$(curl -s "https://api.github.com/repos/neovim/neovim/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')

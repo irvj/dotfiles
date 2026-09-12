@@ -4,8 +4,11 @@
 # a fresh setup and a `dotup` on existing machines pick it up.
 
 # apt packages for the Linux routes (vps, proxmox, workstation).
-# NOTE: glow is intentionally absent — it comes from the Charm apt repo and is
-# handled separately in both scripts.
+# NOTE: glow and newsboat are intentionally absent. glow comes from the Charm
+# apt repo; newsboat comes from the snap store, because the apt build trails
+# upstream by several releases and is missing entirely from some (24.04 has no
+# newsboat at all). Both are handled separately in setup.sh and update.sh.
+# snapd is declared here since newsboat needs it.
 APT_PACKAGES=(
   git
   curl
@@ -22,6 +25,7 @@ APT_PACKAGES=(
   python3-venv
   python3-pip
   xsel
+  snapd
 )
 
 # Homebrew formulae for the mac route.
@@ -39,6 +43,7 @@ BREW_PACKAGES=(
   lazygit
   starship
   glow
+  newsboat
 )
 
 # Map `uname -m` onto the release-asset arch strings used by the neovim and

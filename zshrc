@@ -43,6 +43,11 @@ export NVM_DIR="$HOME/.nvm"
 
 export PATH="$HOME/.opencode/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
 
+# snap puts binaries in /snap/bin, which only reaches PATH through
+# /etc/profile.d in login shells; add it explicitly so newsboat resolves in
+# every shell. The guard keeps this a no-op on mac, where /snap/bin is absent.
+[[ -d /snap/bin ]] && export PATH="$PATH:/snap/bin"
+
 # --- rust (cargo) ---
 
 [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
