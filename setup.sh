@@ -403,6 +403,15 @@ sync_private_dotfiles() {
   $run_cmd "$home_dir/.dotfiles/sync-private.sh"
 }
 
+install_newsboat_config() {
+  local home_dir="$1"
+  local run_cmd="$2"
+
+  print_header "Install newsboat config"
+
+  $run_cmd "$home_dir/.dotfiles/newsboat/install-config.sh"
+}
+
 remind_git_identity() {
   local home_dir="$1"
 
@@ -430,6 +439,7 @@ case "$PLATFORM" in
     echo "mac" > "$HOME/.dotfiles/.platform"
     sync_private_dotfiles "$HOME" ""
     run_install "$HOME" ""
+    install_newsboat_config "$HOME" ""
     update_opencode_skills "$HOME" ""
 
     remind_git_identity "$HOME"
@@ -450,6 +460,7 @@ case "$PLATFORM" in
     echo "vps" > "/home/$USERNAME/.dotfiles/.platform"
     sync_private_dotfiles "/home/$USERNAME" "sudo -u $USERNAME"
     run_install "/home/$USERNAME" "sudo -u $USERNAME"
+    install_newsboat_config "/home/$USERNAME" "sudo -u $USERNAME"
     update_opencode_skills "/home/$USERNAME" "sudo -u $USERNAME"
     chsh -s "$(which zsh)" "$USERNAME"
 
@@ -467,6 +478,7 @@ case "$PLATFORM" in
     echo "proxmox" > "/root/.dotfiles/.platform"
     sync_private_dotfiles "/root" ""
     run_install "/root" ""
+    install_newsboat_config "/root" ""
     update_opencode_skills "/root" ""
     chsh -s "$(which zsh)" root
 
@@ -485,6 +497,7 @@ case "$PLATFORM" in
     echo "workstation" > "$HOME/.dotfiles/.platform"
     sync_private_dotfiles "$HOME" ""
     run_install "$HOME" ""
+    install_newsboat_config "$HOME" ""
     update_opencode_skills "$HOME" ""
     sudo chsh -s "$(which zsh)" "$USER"
 

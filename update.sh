@@ -119,6 +119,16 @@ else
   success "$PRIVATE_OUTPUT"
 fi
 
+# --- install newsboat config ---
+
+# after the private sync, so a private urls file reflects this run's pull
+if ! NEWSBOAT_OUTPUT=$("$DOTFILES/newsboat/install-config.sh" 2>&1); then
+  error "newsboat config install failed"
+  echo "$NEWSBOAT_OUTPUT"
+  exit 1
+fi
+success "$NEWSBOAT_OUTPUT"
+
 # --- update lazyvim plugins ---
 
 if ! LAZY_OUTPUT=$(nvim --headless "+Lazy! sync" +qa 2>&1); then

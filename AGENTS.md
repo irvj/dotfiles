@@ -16,6 +16,8 @@ Liminal Salt visual theme and the current symlink-based installation model.
   whatever it provides into the locations those applications read.
 - `lib/common.sh` is the single source of truth for apt and Homebrew package
   lists, plus Linux release-architecture detection.
+- `newsboat/` contains the tracked Liminal Salt newsboat configuration and the
+  script that places it, with any private overlay, where newsboat reads it.
 - `nvim/` contains LazyVim overrides and the tracked Liminal Salt theme.
 - `opencode/` contains the public OpenCode configuration, theme, instructions,
   and the external skill-sync script.

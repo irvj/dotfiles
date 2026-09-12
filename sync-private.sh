@@ -28,45 +28,6 @@ install_private_skills() {
   fi
 }
 
-# Place any private newsboat files (urls, and config when present) where
-# newsboat actually reads them. The destination depends on how it was
-# installed:
-#
-#   native (mac)   ~/.newsboat/                          — symlinked
-#   snap  (linux)  ~/snap/newsboat/<revision>/.newsboat/ — copied
-#
-# The snap is confined, and its `home` interface denies hidden paths in the
-# real home. A symlink into the private checkout (which lives under a dotdir)
-# resolves to a path AppArmor refuses, so those files have to be copied. snapd
-# copies SNAP_USER_DATA forward on refresh, so a copy survives updates, and
-# `current` tracks the live revision once the snap has been run once.
-#
-# Only the files the private layer provides are touched — never the directory
-# as a whole, because newsboat keeps cache.db and history alongside them.
-#
-# Silent by design: update.sh parses this script's stdout for the sync status.
-install_newsboat_config() {
-  local src="$PRIVATE_DIR/newsboat"
-  [[ -d "$src" ]] || return 0
-
-  local dest=""
-  if [[ -d "$HOME/snap/newsboat/current" ]]; then
-    dest="$HOME/snap/newsboat/current/.newsboat"
-  elif command -v snap >/dev/null 2>&1; then
-    local rev
-    rev=$(snap list newsboat 2>/dev/null | awk 'NR==2 {print $3}')
-    [[ -n "$rev" ]] && dest="$HOME/snap/newsboat/$rev/.newsboat"
-  fi
-
-  if [[ -n "$dest" ]]; then
-    mkdir -p "$dest"
-    find "$src" -maxdepth 1 -type f -exec cp -f {} "$dest/" \;
-  else
-    mkdir -p "$HOME/.newsboat"
-    find "$src" -maxdepth 1 -type f -exec ln -sf {} "$HOME/.newsboat/" \;
-  fi
-}
-
 if [[ -d "$PRIVATE_DIR/.git" ]]; then
   # A clone taken while the remote still had no commits leaves a valid .git
   # with no HEAD. Both `rev-parse HEAD` and `pull --ff-only` fail there, so
@@ -110,8 +71,7 @@ else
   STATUS="private dotfiles cloned"
 fi
 
-# run after the checkout is current, so both reflect this run's pull
+# runs after the checkout is current, so the copy reflects this run's pull
 install_private_skills
-install_newsboat_config
 
 echo "$STATUS"

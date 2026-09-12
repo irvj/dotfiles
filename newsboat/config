@@ -1,0 +1,47 @@
+# --- liminal salt ---
+
+# Colors are given as terminal palette slots rather than absolute values.
+# newsboat's ncurses colors cannot take hex, and slots 16-255 are the fixed
+# xterm cube, which would not match the palette. The terminal already carries
+# Liminal Salt in slots 0-15 (see ghostty/config and
+# windows-terminal/liminal-salt.json), so going through those slots reproduces
+# the real palette and follows the terminal between its dark and light
+# variants on its own.
+#
+#   color0  stone300    color8   sage600
+#   color1  red400      color9   red300
+#   color2  sage500     color10  sage300
+#   color3  amber400    color11  amber400
+#   color4  blue400     color12  blue400
+#   color5  orange400   color13  orange400
+#   color6  teal400     color14  teal400
+#   color7  beige500    color15  beige300
+
+# body text rides the terminal's own background and foreground
+color background          default  default
+color listnormal          default  default
+color article             default  default
+
+# unread lifts to the brightest neutral; read entries stay muted
+color listnormal_unread   color15  default  bold
+
+# the selected row takes the sage accent, matching primary in the OpenCode theme
+color listfocus           color0   color10
+color listfocus_unread    color0   color10  bold
+
+# chrome (title and status bars) takes teal, matching info in the OpenCode theme
+color title               color0   color6   bold
+color info                color0   color6   bold
+
+# key hints in the status bar
+color hint-key            color3   default  bold
+color hint-keys-delimiter color8   default
+color hint-separator      color8   default
+color hint-description    color7   default
+
+color end-of-text-marker  color8   default
+
+# --- article readability ---
+
+highlight article "^(Feed|Title|Author|Link|Date):.*$"  color6  default  bold
+highlight article "https?://[^ ]+"                      color4  default  underline
