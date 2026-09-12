@@ -100,6 +100,7 @@ What this repository defines is only how an optional private layer is loaded:
 
 - Private configuration, when present, can be exposed through `OPENCODE_CONFIG` by `zshrc` and merged over the global config.
 - Optional private skills may be materialized into the registered skills directory without becoming part of this repository.
+- Optional private application configuration may be materialized into the location that application reads. Where an application runs confined (a snap, for instance) the files are copied rather than linked, so an edit to the private source reaches those machines on the next `dotup` rather than immediately.
 - Future integrations should remain isolated from the public source of truth and require no public behavior when the private extension is absent.
 
 Set `DOTFILES_PRIVATE_REPO` or `DOTFILES_PRIVATE_DIR` to override the default repository or local path.

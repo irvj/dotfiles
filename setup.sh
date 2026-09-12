@@ -400,7 +400,7 @@ sync_private_dotfiles() {
 
   print_header "Sync private dotfiles"
 
-  $run_cmd "$home_dir/.dotfiles/opencode/sync-private.sh"
+  $run_cmd "$home_dir/.dotfiles/sync-private.sh"
 }
 
 remind_git_identity() {

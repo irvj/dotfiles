@@ -106,7 +106,7 @@ fi
 
 # --- sync private dotfiles ---
 
-if ! PRIVATE_OUTPUT=$("$DOTFILES/opencode/sync-private.sh" 2>&1); then
+if ! PRIVATE_OUTPUT=$("$DOTFILES/sync-private.sh" 2>&1); then
   error "private dotfiles sync failed"
   echo "$PRIVATE_OUTPUT"
   exit 1

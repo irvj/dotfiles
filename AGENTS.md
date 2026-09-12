@@ -12,11 +12,13 @@ Liminal Salt visual theme and the current symlink-based installation model.
   configuration into the user's home directory.
 - `update.sh` pulls this repository, reinstalls links, updates plugins and
   tools, and applies platform-specific package updates.
+- `sync-private.sh` syncs the optional private extension and materializes
+  whatever it provides into the locations those applications read.
 - `lib/common.sh` is the single source of truth for apt and Homebrew package
   lists, plus Linux release-architecture detection.
 - `nvim/` contains LazyVim overrides and the tracked Liminal Salt theme.
 - `opencode/` contains the public OpenCode configuration, theme, instructions,
-  and skill-sync scripts.
+  and the external skill-sync script.
 
 ## Change Rules
 
