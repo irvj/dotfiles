@@ -31,13 +31,17 @@ color listfocus_unread    color0   color10  bold
 
 # chrome (title and status bars) takes teal, matching info in the OpenCode theme
 color title               color0   color6   bold
-color info                color0   color6   bold
+color info                color0   color6
 
-# key hints in the status bar
-color hint-key            color3   default  bold
-color hint-keys-delimiter color8   default
-color hint-separator      color8   default
-color hint-description    color7   default
+# The hint bar sits on the info style: newsboat falls back to `info` for any
+# hint element left unstyled, and for the gaps between hints and the rest of
+# the line. Giving these a `default` background therefore bands the bar —
+# styled text on the terminal background, unstyled runs in the info color. They
+# all carry the info background, and only the key itself is emphasized.
+color hint-key            color0   color6   bold
+color hint-keys-delimiter color0   color6
+color hint-separator      color0   color6
+color hint-description    color0   color6
 
 color end-of-text-marker  color8   default
 
@@ -45,3 +49,5 @@ color end-of-text-marker  color8   default
 
 highlight article "^(Feed|Title|Author|Link|Date):.*$"  color6  default  bold
 highlight article "https?://[^ ]+"                      color4  default  underline
+highlight article "\\[[0-9]+\\]"                        color4  default  bold
+highlight article "\\[image\\ [0-9]+\\]"                color4  default  bold
