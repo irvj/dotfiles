@@ -290,10 +290,16 @@ case "$PLATFORM" in
       # machines predate it), so its socket may not be up yet; wait for seeding
       # rather than racing it.
       $SUDO snap wait system seed.loaded > /dev/null 2>&1 || true
-      if $SUDO snap install newsboat > /dev/null 2>&1; then
+      if SNAP_OUTPUT=$($SUDO snap install newsboat 2>&1); then
         success "newsboat installed"
+      elif echo "$SNAP_OUTPUT" | grep -q "does not fully support snapd"; then
+        # A property of the container rather than a fault in this run: an
+        # unprivileged LXC cannot attach loop devices for squashfs. Report it
+        # as a skip so it does not read as a broken update on every run.
+        info "snapd unsupported here, skipping newsboat"
       else
         error "newsboat install failed"
+        echo "$SNAP_OUTPUT"
       fi
     else
       NEWSBOAT_BEFORE=$(snap_version newsboat)

@@ -165,10 +165,15 @@ install_newsboat() {
   $pkg_cmd systemctl enable --now snapd.socket > /dev/null 2>&1 || true
   $pkg_cmd snap wait system seed.loaded > /dev/null 2>&1 || true
 
-  if $pkg_cmd snap install newsboat; then
+  if SNAP_OUTPUT=$($pkg_cmd snap install newsboat 2>&1); then
     echo "newsboat installed."
+  elif echo "$SNAP_OUTPUT" | grep -q "does not fully support snapd"; then
+    echo "snapd is not supported in this container; skipping newsboat."
+    echo "To enable it: grant the container nesting and fuse on the Proxmox"
+    echo "host (pct set <vmid> -features nesting=1,fuse=1), then reboot it."
   else
-    echo "Warning: newsboat snap install failed (snapd unavailable?). Skipping."
+    echo "Warning: newsboat snap install failed. Skipping."
+    echo "$SNAP_OUTPUT"
   fi
 }
 

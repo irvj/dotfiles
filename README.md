@@ -68,6 +68,14 @@ Regardless of route, setup installs the same environment:
 
 - **CLI toolchain** — git, tmux, ripgrep, fd, fzf, htop, neovim, lazygit, starship, [OpenCode](https://opencode.ai), [glow](https://github.com/charmbracelet/glow), [newsboat](https://newsboat.org), and more. The exact apt/brew package names live in [`lib/common.sh`](lib/common.sh) (the single source of truth). On mac everything comes from Homebrew; on Linux the apt packages come from `apt`, neovim/lazygit/starship from their GitHub releases, OpenCode from its installer, glow from the [Charm apt repo](https://repo.charm.sh), and newsboat from the snap store.
 - **newsboat** — the terminal RSS reader, themed with Liminal Salt. Homebrew tracks upstream on mac, but the apt build lags by several releases and is missing from some (24.04 ships none), so the Linux routes install the maintainer's own [snap](https://snapcraft.io/newsboat) instead. `snapd` is declared in `lib/common.sh` for that reason. Snap is unavailable in some containers (notably LXC); when it is, newsboat is skipped and the rest of the environment installs normally.
+- **newsboat in an LXC container** — an unprivileged container cannot attach the loop devices snapd needs, so its self-check refuses to run (`system does not fully support snapd`) and newsboat is skipped. To enable it, grant the container fuse and nesting on the Proxmox host and reboot it:
+
+  ```sh
+  pct set <vmid> -features nesting=1,fuse=1
+  pct reboot <vmid>
+  ```
+
+  `squashfuse` is already among the declared packages, so once the host allows it snapd mounts snaps through FUSE instead and `dotup` installs newsboat on the next run.
 - **newsboat configuration** — `newsboat/config` carries the Liminal Salt colors and is placed by `newsboat/install-config.sh`, which also overlays anything an optional private layer provides (a feed list, say). The theme installs whether or not that layer is present. Because the snap runs confined and cannot read hidden paths in the real home, the Linux routes receive copies rather than symlinks, so an edit reaches them on the next `dotup`.
 - **[LazyVim](https://www.lazyvim.org)** as the neovim config, with this repo's overrides layered on top
 - **Zsh** with [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions) and [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting), set as the default shell
