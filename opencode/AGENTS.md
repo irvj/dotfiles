@@ -6,6 +6,7 @@
 - State what you are doing before substantial work.
 - Explain important decisions and tradeoffs briefly.
 - Report verification results and mention tests or checks that were not run.
+- When a question is asked, answer it; a question about the code or the project is not an invitation to start building.
 - Do not stop at a proposed solution when implementation is requested.
 
 ## Repository Workflow
@@ -15,6 +16,7 @@
 - Follow established project patterns instead of introducing new ones unnecessarily.
 - Preserve unrelated user changes in the worktree.
 - Keep scope limited to the requested task.
+- Update relevant documentation when behavior or setup changes.
 
 ## Research And Thoroughness
 
@@ -34,6 +36,7 @@
 
 ## Editing
 
+- Favor correctness, maintainability, security, and portability over expedience.
 - Avoid unnecessary abstractions, dependencies, compatibility layers, and comments.
 - Add comments only when they explain non-obvious behavior or constraints.
 - Do not rewrite or reformat unrelated code.
@@ -42,6 +45,7 @@
 ## Verification
 
 - Run the most relevant focused tests, linters, formatters, or build checks after changes.
+- Do not assume browser or running-app access; default to verification that runs inside the repository.
 - Prefer targeted verification first, followed by broader checks when practical.
 - Never claim that a check passed unless it was actually run.
 
@@ -64,10 +68,9 @@
 - Quote shell paths, especially paths containing spaces.
 - Prefer safe, reviewable file edits over ad-hoc shell redirection.
 
-## User Preferences
+## Frontend Work
 
-- Favor correctness, maintainability, security, and portability.
-- Invoke the `frontend-design` skill before building new UI, restyling existing UI, or making significant visual changes; skip it for logic-only changes and minor fixes.
-- Preserve existing UI and design-system patterns in frontend work.
-- Ensure frontend changes work on desktop and mobile.
-- Update relevant documentation when behavior or setup changes.
+- Match the existing design by default. New features and components must carry the app's established theme; do not introduce a new visual language unless explicitly asked.
+- Locate the project's styling mechanism before writing styles: CSS/SCSS files, purpose-built themes, Tailwind config, tokens, and existing component patterns. Follow the repo's conventions, not generic habits.
+- Never use inline styles or one-off arbitrary values to fix styling. Changes go where the project puts styles, through its existing classes, variables, and utilities.
+- Invoke the `frontend-design` skill for design asks only: a new app or page, an explicit restyle, or a visual overhaul. Feature work inside an established design extends that design instead. If a request could be either, ask.
