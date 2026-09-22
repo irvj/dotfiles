@@ -16,6 +16,15 @@
 - Preserve unrelated user changes in the worktree.
 - Keep scope limited to the requested task.
 
+## Research And Thoroughness
+
+- Understand the cause before changing code. Trace where the values, classes, or components involved come from, and what defines, applies, or overrides them.
+- Search by identifier before editing: grep for the exact class, function, variable, or config key to find every definition, use, and override.
+- Read the full context around matches, not just the matching lines. Open the whole file when its structure matters.
+- Follow chains of inheritance, composition, and precedence end to end instead of assuming the nearest file is the source of truth.
+- If a change does not produce the expected result, stop patching. Re-read the surrounding system with a wider lens and form a new hypothesis before the next attempt.
+- Scale investigation to the change: a one-line fix needs a narrow trace, a cross-cutting change needs a broad one.
+
 ## Editing
 
 - Avoid unnecessary abstractions, dependencies, compatibility layers, and comments.
@@ -43,6 +52,7 @@
 ## User Preferences
 
 - Favor correctness, maintainability, security, and portability.
+- Invoke the `frontend-design` skill before building new UI, restyling existing UI, or making significant visual changes; skip it for logic-only changes and minor fixes.
 - Preserve existing UI and design-system patterns in frontend work.
 - Ensure frontend changes work on desktop and mobile.
 - Update relevant documentation when behavior or setup changes.
