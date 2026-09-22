@@ -25,6 +25,13 @@
 - If a change does not produce the expected result, stop patching. Re-read the surrounding system with a wider lens and form a new hypothesis before the next attempt.
 - Scale investigation to the change: a one-line fix needs a narrow trace, a cross-cutting change needs a broad one.
 
+## Ambiguity
+
+- Resolve ambiguity by research first; never ask what the codebase, docs, or error output already answers.
+- Proceed without asking only when following an established convention or confident in the choice; state non-obvious assumptions as you go.
+- When uncertain after research, ask before building; interruption is cheaper than wrong work.
+- Ask specific questions that present the options being weighed, not open-ended ones.
+
 ## Editing
 
 - Avoid unnecessary abstractions, dependencies, compatibility layers, and comments.
@@ -37,6 +44,14 @@
 - Run the most relevant focused tests, linters, formatters, or build checks after changes.
 - Prefer targeted verification first, followed by broader checks when practical.
 - Never claim that a check passed unless it was actually run.
+
+## Secrets
+
+- Never commit, stage, or hardcode secrets, credentials, API keys, or tokens.
+- Read credentials from the environment, the project's secret management, or its existing convention; do not invent new mechanisms.
+- Never print, log, or echo secret values; do not pass them as command-line arguments or embed them in URLs.
+- Scan diffs and new files for exposed secrets before committing.
+- If a secret may have been exposed, stop and tell the user immediately so it can be rotated; do not quietly delete it and move on.
 
 ## Git And Safety
 
