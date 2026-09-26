@@ -141,7 +141,7 @@ install_linux_packages() {
 
   # install glow (via charm apt repo)
   $pkg_cmd mkdir -p /etc/apt/keyrings
-  curl -fsSL https://repo.charm.sh/apt/gpg.key | $pkg_cmd gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+  curl -fsSL https://repo.charm.sh/apt/gpg.key | $pkg_cmd gpg --batch --yes --dearmor -o /etc/apt/keyrings/charm.gpg
   echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | $pkg_cmd tee /etc/apt/sources.list.d/charm.list > /dev/null
   $pkg_cmd apt update
   $pkg_cmd apt install -y glow

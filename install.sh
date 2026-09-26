@@ -50,6 +50,7 @@ for f in $DOTFILES/nvim/lua/lualine/themes/*.lua; do
   ln -sf "$f" ~/.config/nvim/lua/lualine/themes/$(basename "$f")
 done
 
+mkdir -p ~/.config/nvim/lua/plugins
 for f in $DOTFILES/nvim/lua/plugins/*.lua; do
   ln -sf "$f" ~/.config/nvim/lua/plugins/$(basename "$f")
 done

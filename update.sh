@@ -7,6 +7,9 @@ RESET_PLATFORM=false
 
 SKIP_PULL=false
 
+# the parse loop below consumes $@; the re-exec needs the caller's flags
+ORIGINAL_ARGS=("$@")
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -p|--platform) RESET_PLATFORM=true; shift ;;
@@ -72,7 +75,7 @@ else
     info "dotfiles updated ($FILES_CHANGED files changed)"
     # re-exec with the updated script if update.sh itself changed
     if echo "$PULL_OUTPUT" | grep -q "update.sh"; then
-      exec "$DOTFILES/update.sh" --skip-pull "$@"
+      exec "$DOTFILES/update.sh" --skip-pull "${ORIGINAL_ARGS[@]}"
     fi
   fi
 fi
@@ -227,9 +230,11 @@ case "$PLATFORM" in
       SUDO="sudo"
     fi
 
-    # Keep normal apt output captured below, but leave stderr attached to the
-    # terminal so debconf dialog prompts remain visible and interactive.
-    APT_PROMPT_FD="/dev/null"
+    # apt's normal output is captured below. Interactive: leave stderr on the
+    # terminal so a debconf dialog stays visible and answerable. Non-interactive
+    # (under Ansible): fold stderr into the captured stdout rather than
+    # discarding it, or an apt failure is reported with no reason attached.
+    APT_PROMPT_FD="/dev/stdout"
     if [[ -t 1 && -r /dev/tty ]]; then
       APT_PROMPT_FD="/dev/tty"
     fi
@@ -242,7 +247,7 @@ case "$PLATFORM" in
     if ! command -v glow &>/dev/null; then
       GLOW_MISSING=true
       $SUDO mkdir -p /etc/apt/keyrings
-      curl -fsSL https://repo.charm.sh/apt/gpg.key | $SUDO gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+      curl -fsSL https://repo.charm.sh/apt/gpg.key | $SUDO gpg --batch --yes --dearmor -o /etc/apt/keyrings/charm.gpg
       echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | $SUDO tee /etc/apt/sources.list.d/charm.list > /dev/null
     fi
 
@@ -262,7 +267,11 @@ case "$PLATFORM" in
     fi
 
     if $GLOW_MISSING; then
-      $SUDO env LC_ALL=C apt-get install -y glow > /dev/null 2>"$APT_PROMPT_FD"
+      if ! GLOW_OUTPUT=$($SUDO env LC_ALL=C apt-get install -y glow 2>"$APT_PROMPT_FD"); then
+        error "glow install failed"
+        echo "$GLOW_OUTPUT"
+        exit 1
+      fi
       success "glow installed"
     fi
 
@@ -381,6 +390,7 @@ update_opencode() {
   local bin=""
   local before
   local after
+  local latest
   local output
 
   if command -v opencode &>/dev/null; then
@@ -409,6 +419,17 @@ update_opencode() {
   fi
 
   before=$($bin --version 2>/dev/null || echo "none")
+
+  # `opencode upgrade` asks api.github.com, which allows 60 requests/hour per
+  # IP, and a whole fleet shares one WAN address. The release redirect costs no
+  # quota, so it decides whether the upgrade is worth running at all. An
+  # unresolvable tag leaves $latest empty, which runs the upgrade.
+  latest=$(latest_tag anomalyco/opencode 2>/dev/null || echo "")
+  if [[ -n "$latest" && "$before" == "$latest" ]]; then
+    success "opencode v$before"
+    return
+  fi
+
   if ! output=$($bin upgrade 2>&1); then
     error "opencode upgrade failed"
     echo "$output"

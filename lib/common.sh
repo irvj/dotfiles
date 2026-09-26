@@ -50,13 +50,12 @@ BREW_PACKAGES=(
   newsboat
 )
 
-# Resolve a GitHub repo's latest release tag without touching api.github.com.
-# The unauthenticated API allows 60 requests/hour per IP: a fleet of containers
-# behind one WAN address burns ~3 per host per update run, so a handful of runs
-# exhausts it. The /releases/latest redirect is not rate limited. Prints the
-# bare version with no leading "v", and returns non-zero when the tag cannot be
-# resolved -- callers must abort rather than build a download URL with an empty
-# version in it, which 404s and leaves tar unpacking an HTML error page.
+# Resolve a GitHub repo's latest release tag from the /releases/latest redirect.
+# The unauthenticated api.github.com allows 60 requests/hour per IP and a whole
+# fleet shares one WAN address; the redirect has no such limit. Prints the bare
+# version with no leading "v". Returns non-zero when the tag does not resolve,
+# which callers must treat as fatal: an empty version builds a download URL that
+# 404s, leaving tar to unpack an HTML error page.
 latest_tag() {
   local repo="$1" tag
   tag=$(curl -sI "https://github.com/$repo/releases/latest" \
