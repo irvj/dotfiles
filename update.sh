@@ -260,6 +260,18 @@ case "$PLATFORM" in
       APT_UPGRADE="full-upgrade"
     fi
 
+    # needrestart runs after every apt transaction and prints its scan progress
+    # on stderr, which reaches the terminal above. Restart affected services
+    # automatically and keep it quiet; the kernel check below covers reboots.
+    if [[ -d /etc/needrestart ]]; then
+      NR_CONF="/etc/needrestart/conf.d/dotfiles.conf"
+      NR_WANT=$'# managed by dotfiles update.sh\n$nrconf{restart} = \'a\';\n$nrconf{verbosity} = 0;'
+      if [[ "$(cat "$NR_CONF" 2>/dev/null)" != "$NR_WANT" ]]; then
+        $SUDO mkdir -p /etc/needrestart/conf.d
+        printf '%s\n' "$NR_WANT" | $SUDO tee "$NR_CONF" > /dev/null
+      fi
+    fi
+
     # LC_ALL=C forces English apt output so the greps below stay reliable
     if ! APT_OUTPUT=$($SUDO env LC_ALL=C apt-get update 2>"$APT_PROMPT_FD" && $SUDO env LC_ALL=C apt-get "$APT_UPGRADE" -y 2>"$APT_PROMPT_FD"); then
       error "system package update failed"
