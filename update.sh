@@ -251,8 +251,17 @@ case "$PLATFORM" in
       echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | $SUDO tee /etc/apt/sources.list.d/charm.list > /dev/null
     fi
 
+    # A Proxmox VE host needs full-upgrade: plain upgrade holds back packages
+    # that pull in new dependencies (a new kernel series, pve-manager), leaving
+    # the host partially upgraded. Containers on the proxmox platform are not
+    # PVE hosts and use upgrade.
+    APT_UPGRADE="upgrade"
+    if command -v pveversion &>/dev/null; then
+      APT_UPGRADE="full-upgrade"
+    fi
+
     # LC_ALL=C forces English apt output so the greps below stay reliable
-    if ! APT_OUTPUT=$($SUDO env LC_ALL=C apt-get update 2>"$APT_PROMPT_FD" && $SUDO env LC_ALL=C apt-get upgrade -y 2>"$APT_PROMPT_FD"); then
+    if ! APT_OUTPUT=$($SUDO env LC_ALL=C apt-get update 2>"$APT_PROMPT_FD" && $SUDO env LC_ALL=C apt-get "$APT_UPGRADE" -y 2>"$APT_PROMPT_FD"); then
       error "system package update failed"
       echo "$APT_OUTPUT"
       exit 1
@@ -262,7 +271,7 @@ case "$PLATFORM" in
     else
       success "system packages upgraded"
     fi
-    if echo "$APT_OUTPUT" | grep -qi "linux-image\|pve-kernel"; then
+    if echo "$APT_OUTPUT" | grep -qi "linux-image\|pve-kernel\|proxmox-kernel"; then
       info "kernel updated, reboot recommended"
     fi
 

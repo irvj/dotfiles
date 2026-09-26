@@ -112,7 +112,11 @@ install_linux_packages() {
 
   print_header "Install Linux packages"
 
-  $pkg_cmd apt update && $pkg_cmd apt upgrade -y
+  # a Proxmox VE host needs full-upgrade; plain upgrade holds back packages
+  # that pull in new dependencies and leaves the host partially upgraded
+  local upgrade="upgrade"
+  command -v pveversion &>/dev/null && upgrade="full-upgrade"
+  $pkg_cmd apt update && $pkg_cmd apt "$upgrade" -y
 
   # bootstrap curl so we can fetch the shared package list (single source of
   # truth in lib/common.sh), then install the declared packages
