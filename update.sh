@@ -261,11 +261,12 @@ case "$PLATFORM" in
     fi
 
     # needrestart runs after every apt transaction and prints its scan progress
-    # on stderr, which reaches the terminal above. Restart affected services
-    # automatically and keep it quiet; the kernel check below covers reboots.
+    # on stderr, which reaches the terminal above. Keep it quiet. Restart mode
+    # is left alone: Ubuntu's apt hook already restarts services automatically,
+    # and setting $nrconf{restart} would switch that Ubuntu mode off.
     if [[ -d /etc/needrestart ]]; then
       NR_CONF="/etc/needrestart/conf.d/dotfiles.conf"
-      NR_WANT=$'# managed by dotfiles update.sh\n$nrconf{restart} = \'a\';\n$nrconf{verbosity} = 0;'
+      NR_WANT=$'# managed by dotfiles update.sh\n$nrconf{verbosity} = 0;'
       if [[ "$(cat "$NR_CONF" 2>/dev/null)" != "$NR_WANT" ]]; then
         $SUDO mkdir -p /etc/needrestart/conf.d
         printf '%s\n' "$NR_WANT" | $SUDO tee "$NR_CONF" > /dev/null
