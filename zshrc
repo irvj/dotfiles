@@ -142,6 +142,12 @@ alias v='nvim'
 alias vim='nvim'
 alias dotup='~/.dotfiles/update.sh'
 
+# proxmox updates; only defined where the ansible repo is checked out. Runs
+# from the repo so ansible-playbook picks up its ansible.cfg and inventory.
+if [[ -d ~/GitHub/irvj/proxmox-ansible ]]; then
+  pveup() { (cd ~/GitHub/irvj/proxmox-ansible && ansible-playbook update.yml "$@") }
+fi
+
 # --- extract function ---
 
 extract() {
