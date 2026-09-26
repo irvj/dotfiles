@@ -316,7 +316,7 @@ case "$PLATFORM" in
       fi
     fi
 
-    NVIM_LATEST=$(curl -s "https://api.github.com/repos/neovim/neovim/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+    NVIM_LATEST=$(latest_tag neovim/neovim) || exit 1
     NVIM_CURRENT=$(nvim --version 2>/dev/null | head -1 | grep -Po 'v\K\S+' || echo "none")
     if [[ "$NVIM_CURRENT" != "$NVIM_LATEST" ]]; then
       info "neovim v$NVIM_CURRENT → v$NVIM_LATEST"
@@ -331,7 +331,7 @@ case "$PLATFORM" in
       success "neovim v$NVIM_CURRENT"
     fi
 
-    LAZYGIT_LATEST=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+    LAZYGIT_LATEST=$(latest_tag jesseduffield/lazygit) || exit 1
     LAZYGIT_CURRENT=$(lazygit --version 2>/dev/null | grep -Po ', version=\K[^,]+' || echo "none")
     if [[ "$LAZYGIT_CURRENT" != "$LAZYGIT_LATEST" ]]; then
       info "lazygit v$LAZYGIT_CURRENT → v$LAZYGIT_LATEST"
@@ -344,7 +344,7 @@ case "$PLATFORM" in
       success "lazygit v$LAZYGIT_CURRENT"
     fi
 
-    STARSHIP_LATEST=$(curl -s "https://api.github.com/repos/starship/starship/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+    STARSHIP_LATEST=$(latest_tag starship/starship) || exit 1
     STARSHIP_CURRENT=$(starship --version 2>/dev/null | head -1 | grep -Po 'starship \K\S+' || echo "none")
     if [[ "$STARSHIP_CURRENT" != "$STARSHIP_LATEST" ]]; then
       info "starship v$STARSHIP_CURRENT → v$STARSHIP_LATEST"

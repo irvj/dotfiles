@@ -50,6 +50,24 @@ BREW_PACKAGES=(
   newsboat
 )
 
+# Resolve a GitHub repo's latest release tag without touching api.github.com.
+# The unauthenticated API allows 60 requests/hour per IP: a fleet of containers
+# behind one WAN address burns ~3 per host per update run, so a handful of runs
+# exhausts it. The /releases/latest redirect is not rate limited. Prints the
+# bare version with no leading "v", and returns non-zero when the tag cannot be
+# resolved -- callers must abort rather than build a download URL with an empty
+# version in it, which 404s and leaves tar unpacking an HTML error page.
+latest_tag() {
+  local repo="$1" tag
+  tag=$(curl -sI "https://github.com/$repo/releases/latest" \
+    | sed -n 's#^[Ll]ocation:.*/tag/v\{0,1\}\([^[:space:]]*\).*#\1#p')
+  if [[ -z "$tag" ]]; then
+    echo "Error: could not resolve latest release tag for $repo" >&2
+    return 1
+  fi
+  printf '%s\n' "$tag"
+}
+
 # Map `uname -m` onto the release-asset arch strings used by the neovim and
 # lazygit GitHub downloads. Sets NVIM_ARCH and LG_ARCH; returns non-zero on an
 # unsupported architecture so callers can abort.
