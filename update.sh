@@ -271,7 +271,9 @@ case "$PLATFORM" in
     else
       success "system packages upgraded"
     fi
-    if echo "$APT_OUTPUT" | grep -qi "linux-image\|pve-kernel\|proxmox-kernel"; then
+    # "Setting up" only appears for a package installed by this run; a bare
+    # name match also hits the autoremove list of old kernels
+    if echo "$APT_OUTPUT" | grep -q "^Setting up \(linux-image\|pve-kernel\|proxmox-kernel\)"; then
       info "kernel updated, reboot recommended"
     fi
 
