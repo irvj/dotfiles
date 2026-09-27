@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -eo pipefail
 
 USERNAME="deploy"
 DOTFILES_REPO="https://github.com/irvj/dotfiles.git"
@@ -64,7 +64,10 @@ confirm() {
   if $AUTO_YES; then
     return 0
   fi
-  read -rp "$1 [y/N] " response
+  # under `curl | bash` stdin is the script itself, so read the answer from
+  # the terminal; with no terminal the redirect fails and the answer is no
+  local response
+  read -rp "$1 [y/N] " response < /dev/tty || return 1
   [[ "$response" =~ ^[Yy]$ ]]
 }
 
@@ -127,21 +130,26 @@ install_linux_packages() {
   $pkg_cmd apt install -y "${APT_PACKAGES[@]}"
 
   # install starship
-  curl -sS https://starship.rs/install.sh | $pkg_cmd sh -s -- -y
+  curl -fsSL https://starship.rs/install.sh | $pkg_cmd sh -s -- -y
 
-  # install neovim
-  curl -LO "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-${NVIM_ARCH}.tar.gz"
-  tar xzf "nvim-linux-${NVIM_ARCH}.tar.gz"
-  $pkg_cmd mv "nvim-linux-${NVIM_ARCH}" /opt/nvim
+  # release downloads go to a scratch directory rather than the caller's cwd
+  local dl
+  dl=$(mktemp -d)
+
+  # install neovim; replace /opt/nvim outright, since mv onto an existing
+  # directory would nest the new release inside it and keep the old binary
+  curl -fsSLo "$dl/nvim.tar.gz" "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-${NVIM_ARCH}.tar.gz"
+  tar xzf "$dl/nvim.tar.gz" -C "$dl"
+  $pkg_cmd rm -rf /opt/nvim
+  $pkg_cmd mv "$dl/nvim-linux-${NVIM_ARCH}" /opt/nvim
   $pkg_cmd ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
-  rm "nvim-linux-${NVIM_ARCH}.tar.gz"
 
   # install lazygit
   LAZYGIT_VERSION=$(latest_tag jesseduffield/lazygit) || exit 1
-  curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_${LG_ARCH}.tar.gz"
-  tar xf lazygit.tar.gz lazygit
-  $pkg_cmd install lazygit /usr/local/bin
-  rm lazygit lazygit.tar.gz
+  curl -fsSLo "$dl/lazygit.tar.gz" "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_${LG_ARCH}.tar.gz"
+  tar xf "$dl/lazygit.tar.gz" -C "$dl" lazygit
+  $pkg_cmd install "$dl/lazygit" /usr/local/bin
+  rm -rf "$dl"
 
   # install glow (via charm apt repo)
   $pkg_cmd mkdir -p /etc/apt/keyrings
@@ -171,7 +179,7 @@ install_newsboat() {
 
   if SNAP_OUTPUT=$($pkg_cmd snap install newsboat 2>&1); then
     echo "newsboat installed."
-  elif echo "$SNAP_OUTPUT" | grep -q "does not fully support snapd"; then
+  elif grep -q "does not fully support snapd" <<< "$SNAP_OUTPUT"; then
     echo "snapd is not supported in this container; skipping newsboat."
     echo "To enable it: grant the container nesting and fuse on the Proxmox"
     echo "host (pct set <vmid> -features nesting=1,fuse=1), then reboot it."
@@ -278,7 +286,11 @@ setup_mac() {
   # install homebrew if not present
   if ! command -v brew &>/dev/null; then
     echo "Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    # fetch first: a failed download inside the argument would hand bash an
+    # empty script, which succeeds
+    local brew_installer
+    brew_installer=$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)
+    /bin/bash -c "$brew_installer"
 
     # add brew to PATH for this session
     if [[ -f /opt/homebrew/bin/brew ]]; then
@@ -306,10 +318,9 @@ install_nerd_font() {
   print_header "Install Nerd Font"
 
   $run_cmd mkdir -p "$home_dir/.local/share/fonts"
-  curl -Lo /tmp/JetBrainsMono.tar.xz \
-    "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
-  $run_cmd tar xf /tmp/JetBrainsMono.tar.xz -C "$home_dir/.local/share/fonts"
-  rm /tmp/JetBrainsMono.tar.xz
+  # streamed straight into tar as the target user, so no temp file in /tmp
+  curl -fsSL "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz" | \
+    $run_cmd tar xJf - -C "$home_dir/.local/share/fonts"
   fc-cache -fv
 }
 
@@ -385,6 +396,14 @@ clone_dotfiles() {
   fi
 }
 
+# written as the target user, so a later `dotup -p` can rewrite it
+write_platform() {
+  local home_dir="$1"
+  local run_cmd="$2"
+
+  echo "$PLATFORM" | $run_cmd tee "$home_dir/.dotfiles/.platform" > /dev/null
+}
+
 run_install() {
   local home_dir="$1"
   local run_cmd="$2"
@@ -409,7 +428,10 @@ sync_private_dotfiles() {
 
   print_header "Sync private dotfiles"
 
-  $run_cmd "$home_dir/.dotfiles/sync-private.sh"
+  # optional: a failure must not abort provisioning
+  if ! $run_cmd "$home_dir/.dotfiles/sync-private.sh"; then
+    echo "Warning: private dotfiles sync failed, continuing without it."
+  fi
 }
 
 install_newsboat_config() {
@@ -445,7 +467,7 @@ case "$PLATFORM" in
     install_rust "$HOME" ""
     setup_zsh_plugins "$HOME" ""
     clone_dotfiles "$HOME" ""
-    echo "mac" > "$HOME/.dotfiles/.platform"
+    write_platform "$HOME" ""
     sync_private_dotfiles "$HOME" ""
     run_install "$HOME" ""
     install_newsboat_config "$HOME" ""
@@ -466,7 +488,7 @@ case "$PLATFORM" in
     reset_shell "/home/$USERNAME"
     setup_zsh_plugins "/home/$USERNAME" "sudo -u $USERNAME"
     clone_dotfiles "/home/$USERNAME" "sudo -u $USERNAME"
-    echo "vps" > "/home/$USERNAME/.dotfiles/.platform"
+    write_platform "/home/$USERNAME" "sudo -u $USERNAME"
     sync_private_dotfiles "/home/$USERNAME" "sudo -u $USERNAME"
     run_install "/home/$USERNAME" "sudo -u $USERNAME"
     install_newsboat_config "/home/$USERNAME" "sudo -u $USERNAME"
@@ -484,7 +506,7 @@ case "$PLATFORM" in
     reset_shell "/root"
     setup_zsh_plugins "/root" ""
     clone_dotfiles "/root" ""
-    echo "proxmox" > "/root/.dotfiles/.platform"
+    write_platform "/root" ""
     sync_private_dotfiles "/root" ""
     run_install "/root" ""
     install_newsboat_config "/root" ""
@@ -503,7 +525,7 @@ case "$PLATFORM" in
     reset_shell "$HOME"
     setup_zsh_plugins "$HOME" ""
     clone_dotfiles "$HOME" ""
-    echo "workstation" > "$HOME/.dotfiles/.platform"
+    write_platform "$HOME" ""
     sync_private_dotfiles "$HOME" ""
     run_install "$HOME" ""
     install_newsboat_config "$HOME" ""

@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -eo pipefail
 
 DOTFILES="$HOME/.dotfiles"
 PLATFORM_FILE="$DOTFILES/.platform"
@@ -31,7 +31,14 @@ info()    { echo -e "${YELLOW}→${NC} $1"; }
 error()   { echo -e "${RED}✗${NC} $1"; }
 
 # Second column of `snap list` is the version; empty when the snap is absent.
-snap_version() { snap list "$1" 2>/dev/null | awk 'NR==2 {print $2}'; }
+snap_version() { snap list "$1" 2>/dev/null | awk 'NR==2 {print $2}' || true; }
+
+# Installed tool versions without a leading "v", or "none" when absent. sed
+# reads all of its input, so the tool never takes a SIGPIPE under pipefail the
+# way it could from `head -1`.
+nvim_version()     { nvim --version 2>/dev/null | sed -n '1s/^NVIM v//p' | grep . || echo "none"; }
+lazygit_version()  { lazygit --version 2>/dev/null | sed -n 's/.*, version=\([^,]*\).*/\1/p' | grep . || echo "none"; }
+starship_version() { starship --version 2>/dev/null | sed -n '1s/^starship //p' | grep . || echo "none"; }
 
 # --- read platform ---
 
@@ -67,14 +74,18 @@ echo ""
 if $SKIP_PULL; then
   success "dotfiles updated"
 else
-  PULL_OUTPUT=$(git -C "$DOTFILES" pull 2>&1)
-  if echo "$PULL_OUTPUT" | grep -q "Already up to date."; then
+  if ! PULL_OUTPUT=$(git -C "$DOTFILES" pull 2>&1); then
+    error "dotfiles pull failed"
+    echo "$PULL_OUTPUT"
+    exit 1
+  fi
+  if grep -q "Already up to date." <<< "$PULL_OUTPUT"; then
     success "dotfiles up to date"
   else
     FILES_CHANGED=$(echo "$PULL_OUTPUT" | grep -oE '[0-9]+ files? changed' | grep -oE '[0-9]+' || echo "")
     info "dotfiles updated ($FILES_CHANGED files changed)"
     # re-exec with the updated script if update.sh itself changed
-    if echo "$PULL_OUTPUT" | grep -q "update.sh"; then
+    if grep -q "update.sh" <<< "$PULL_OUTPUT"; then
       exec "$DOTFILES/update.sh" --skip-pull "${ORIGINAL_ARGS[@]}"
     fi
   fi
@@ -109,13 +120,13 @@ fi
 
 # --- sync private dotfiles ---
 
+# The extension is optional, so a failure is reported and the update carries
+# on with the public configuration.
 if ! PRIVATE_OUTPUT=$("$DOTFILES/sync-private.sh" 2>&1); then
-  error "private dotfiles sync failed"
+  error "private dotfiles sync failed, continuing without it"
   echo "$PRIVATE_OUTPUT"
-  exit 1
-fi
-if [[ "$PRIVATE_OUTPUT" == *"unavailable"* ]]; then
-  error "$PRIVATE_OUTPUT"
+elif [[ "$PRIVATE_OUTPUT" == *"skipped"* ]]; then
+  info "$PRIVATE_OUTPUT"
 elif [[ "$PRIVATE_OUTPUT" == *"updated" || "$PRIVATE_OUTPUT" == *"cloned" ]]; then
   info "$PRIVATE_OUTPUT"
 else
@@ -171,11 +182,15 @@ case "$PLATFORM" in
     export HOMEBREW_NO_AUTO_UPDATE=1
     export HOMEBREW_NO_ENV_HINTS=1
 
-    NVIM_BEFORE=$(nvim --version 2>/dev/null | head -1 | sed 's/NVIM v//' || echo "none")
-    LAZYGIT_BEFORE=$(lazygit --version 2>/dev/null | grep -oE 'version=[^,]+' | head -1 | sed 's/version=//' || echo "none")
-    STARSHIP_BEFORE=$(starship --version 2>/dev/null | head -1 | sed 's/starship //' || echo "none")
+    NVIM_BEFORE=$(nvim_version)
+    LAZYGIT_BEFORE=$(lazygit_version)
+    STARSHIP_BEFORE=$(starship_version)
 
-    brew update > /dev/null 2>&1
+    if ! BREW_UPDATE_OUTPUT=$(brew update 2>&1); then
+      error "brew update failed"
+      echo "$BREW_UPDATE_OUTPUT"
+      exit 1
+    fi
 
     # ensure every declared formula is present (installs newly-added ones on
     # machines set up before the package was added; no-op when all present)
@@ -197,9 +212,9 @@ case "$PLATFORM" in
       success "homebrew packages upgraded"
     fi
 
-    NVIM_AFTER=$(nvim --version 2>/dev/null | head -1 | sed 's/NVIM v//' || echo "none")
-    LAZYGIT_AFTER=$(lazygit --version 2>/dev/null | grep -oE 'version=[^,]+' | head -1 | sed 's/version=//' || echo "none")
-    STARSHIP_AFTER=$(starship --version 2>/dev/null | head -1 | sed 's/starship //' || echo "none")
+    NVIM_AFTER=$(nvim_version)
+    LAZYGIT_AFTER=$(lazygit_version)
+    STARSHIP_AFTER=$(starship_version)
 
     for tool in neovim lazygit starship; do
       case "$tool" in
@@ -279,14 +294,14 @@ case "$PLATFORM" in
       echo "$APT_OUTPUT"
       exit 1
     fi
-    if echo "$APT_OUTPUT" | grep -q "^0 upgraded"; then
+    if grep -q "^0 upgraded" <<< "$APT_OUTPUT"; then
       success "system packages up to date"
     else
       success "system packages upgraded"
     fi
     # "Setting up" only appears for a package installed by this run; a bare
     # name match also hits the autoremove list of old kernels
-    if echo "$APT_OUTPUT" | grep -q "^Setting up \(linux-image\|pve-kernel\|proxmox-kernel\)"; then
+    if grep -q "^Setting up \(linux-image\|pve-kernel\|proxmox-kernel\)" <<< "$APT_OUTPUT"; then
       info "kernel updated, reboot recommended"
     fi
 
@@ -306,7 +321,7 @@ case "$PLATFORM" in
       echo "$PKG_OUTPUT"
       exit 1
     fi
-    if echo "$PKG_OUTPUT" | grep -q "0 newly installed"; then
+    if grep -q "0 newly installed" <<< "$PKG_OUTPUT"; then
       success "declared packages present"
     else
       info "installed missing packages"
@@ -325,7 +340,7 @@ case "$PLATFORM" in
       $SUDO snap wait system seed.loaded > /dev/null 2>&1 || true
       if SNAP_OUTPUT=$($SUDO snap install newsboat 2>&1); then
         success "newsboat installed"
-      elif echo "$SNAP_OUTPUT" | grep -q "does not fully support snapd"; then
+      elif grep -q "does not fully support snapd" <<< "$SNAP_OUTPUT"; then
         # A property of the container rather than a fault in this run: an
         # unprivileged LXC cannot attach loop devices for squashfs. Report it
         # as a skip so it does not read as a broken update on every run.
@@ -350,11 +365,11 @@ case "$PLATFORM" in
     fi
 
     NVIM_LATEST=$(latest_tag neovim/neovim) || exit 1
-    NVIM_CURRENT=$(nvim --version 2>/dev/null | head -1 | grep -Po 'v\K\S+' || echo "none")
+    NVIM_CURRENT=$(nvim_version)
     if [[ "$NVIM_CURRENT" != "$NVIM_LATEST" ]]; then
       info "neovim v$NVIM_CURRENT → v$NVIM_LATEST"
       DL=$(mktemp -d)
-      curl -sLo "$DL/nvim.tar.gz" "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-${NVIM_ARCH}.tar.gz"
+      curl -fsSLo "$DL/nvim.tar.gz" "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-${NVIM_ARCH}.tar.gz"
       tar xzf "$DL/nvim.tar.gz" -C "$DL"
       $SUDO rm -rf /opt/nvim
       $SUDO mv "$DL/nvim-linux-${NVIM_ARCH}" /opt/nvim
@@ -365,11 +380,11 @@ case "$PLATFORM" in
     fi
 
     LAZYGIT_LATEST=$(latest_tag jesseduffield/lazygit) || exit 1
-    LAZYGIT_CURRENT=$(lazygit --version 2>/dev/null | grep -Po ', version=\K[^,]+' || echo "none")
+    LAZYGIT_CURRENT=$(lazygit_version)
     if [[ "$LAZYGIT_CURRENT" != "$LAZYGIT_LATEST" ]]; then
       info "lazygit v$LAZYGIT_CURRENT → v$LAZYGIT_LATEST"
       DL=$(mktemp -d)
-      curl -sLo "$DL/lazygit.tar.gz" "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_LATEST}_Linux_${LG_ARCH}.tar.gz"
+      curl -fsSLo "$DL/lazygit.tar.gz" "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_LATEST}_Linux_${LG_ARCH}.tar.gz"
       tar xf "$DL/lazygit.tar.gz" -C "$DL" lazygit
       $SUDO install "$DL/lazygit" /usr/local/bin
       rm -rf "$DL"
@@ -378,10 +393,10 @@ case "$PLATFORM" in
     fi
 
     STARSHIP_LATEST=$(latest_tag starship/starship) || exit 1
-    STARSHIP_CURRENT=$(starship --version 2>/dev/null | head -1 | grep -Po 'starship \K\S+' || echo "none")
+    STARSHIP_CURRENT=$(starship_version)
     if [[ "$STARSHIP_CURRENT" != "$STARSHIP_LATEST" ]]; then
       info "starship v$STARSHIP_CURRENT → v$STARSHIP_LATEST"
-      if ! curl -sS https://starship.rs/install.sh | $SUDO sh -s -- -y > /dev/null; then
+      if ! curl -fsSL https://starship.rs/install.sh | $SUDO sh -s -- -y > /dev/null; then
         error "starship install failed"
         exit 1
       fi
@@ -393,10 +408,8 @@ case "$PLATFORM" in
     if ! ls "$HOME/.local/share/fonts"/JetBrainsMonoNerd* &>/dev/null; then
       info "installing jetbrains mono nerd font..."
       mkdir -p "$HOME/.local/share/fonts"
-      curl -sLo /tmp/JetBrainsMono.tar.xz \
-        "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
-      tar xf /tmp/JetBrainsMono.tar.xz -C "$HOME/.local/share/fonts"
-      rm /tmp/JetBrainsMono.tar.xz
+      curl -fsSL "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz" | \
+        tar xJf - -C "$HOME/.local/share/fonts"
       command -v fc-cache &>/dev/null && fc-cache -f > /dev/null 2>&1
       success "jetbrains mono nerd font installed"
     fi
@@ -474,13 +487,18 @@ update_opencode
 
 if command -v rustup &>/dev/null; then
   # keep toolchains current (rustup update also self-updates rustup); only
-  # report when something actually changes to keep routine updates quiet
-  if rustup update 2>&1 | grep -q "updated"; then
+  # report when something actually changes to keep routine updates quiet.
+  # Captured rather than piped to `grep -q`, which exits at the first match
+  # and could kill rustup mid-update with SIGPIPE.
+  if ! RUSTUP_UPDATE_OUTPUT=$(rustup update 2>&1); then
+    error "rust toolchain update failed"
+    echo "$RUSTUP_UPDATE_OUTPUT"
+  elif grep -q "updated" <<< "$RUSTUP_UPDATE_OUTPUT"; then
     info "rust toolchains updated"
   fi
   # Only report when we actually install it (or fail); staying silent when
   # it's already present keeps routine updates quiet.
-  if ! rustup component list --installed 2>/dev/null | grep -q "^rust-analyzer"; then
+  if ! grep -q "^rust-analyzer" <<< "$(rustup component list --installed 2>/dev/null)"; then
     info "installing rust-analyzer component"
     if ! RUSTUP_OUTPUT=$(rustup component add rust-analyzer 2>&1); then
       error "rust-analyzer install failed"
