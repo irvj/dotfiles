@@ -37,6 +37,16 @@ SNAP_APT_PACKAGES=(
   squashfuse
 )
 
+# Docker Engine, from Docker's own apt repo, on the vps and workstation routes
+# only — never proxmox or mac.
+DOCKER_APT_PACKAGES=(
+  docker-ce
+  docker-ce-cli
+  containerd.io
+  docker-buildx-plugin
+  docker-compose-plugin
+)
+
 # Homebrew formulae for the mac route.
 BREW_PACKAGES=(
   git

@@ -129,24 +129,6 @@ install_bootstrap_packages() {
   $pkg_cmd apt-get install -y git curl ca-certificates gnupg
 }
 
-# --- docker install ---
-
-install_docker() {
-  print_header "Install Docker"
-
-  # add docker apt repo
-  install -m 0755 -d /etc/apt/keyrings
-  fetch -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-  chmod a+r /etc/apt/keyrings/docker.asc
-
-  echo \
-    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list
-
-  apt-get update
-  apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-}
-
 # --- vps hardening ---
 
 harden_vps() {
@@ -307,9 +289,7 @@ case "$PLATFORM" in
     AS_DEPLOY="sudo -H -u $USERNAME"
 
     install_bootstrap_packages ""
-    install_docker
     harden_vps
-    usermod -aG docker "$USERNAME"
     reset_shell "/home/$USERNAME"
     clone_dotfiles "/home/$USERNAME" "$AS_DEPLOY"
     write_platform "/home/$USERNAME" "$AS_DEPLOY"

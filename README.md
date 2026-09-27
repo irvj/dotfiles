@@ -18,13 +18,12 @@ curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash 
 
 **Runs as root.** Installs packages via apt, then provisions a hardened server:
 
-- [Docker Engine](https://docs.docker.com/engine/install/ubuntu/) (CE, CLI, containerd, Buildx, Compose plugin)
 - `ufw` and `sudo`
 - a non-root `deploy` user with passwordless sudo and `docker` group membership, with root's SSH `authorized_keys` copied over
 - disables root SSH login and password authentication
 - enables `ufw` (allows OpenSSH only)
 
-The dotfiles environment is installed for the `deploy` user.
+The dotfiles environment, including [Docker](#docker), is installed for the `deploy` user.
 
 > **Warning:** This route locks out root SSH access and enables a firewall. Make sure your SSH key is in `/root/.ssh/authorized_keys` before running.
 
@@ -42,7 +41,7 @@ curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash 
 
 ### `workstation`
 
-**Runs as your normal user** (uses sudo for package installation). Installs packages via apt and the dotfiles environment. Does **not** create a user, install `ufw`/`sudo`, modify SSH config, or enable a firewall.
+**Runs as your normal user** (uses sudo for package installation). Installs packages via apt and the dotfiles environment, including [Docker](#docker). Does **not** create a user, install `ufw`/`sudo`, modify SSH config, or enable a firewall.
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash -s workstation
@@ -80,6 +79,7 @@ Regardless of route, setup installs the same environment, except where noted:
 - **[LazyVim](https://www.lazyvim.org)** as the neovim config, with this repo's overrides layered on top
 - **Zsh** with [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions) and [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting), set as the default shell
 - **JetBrains Mono Nerd Font** (powerline glyphs, icons, coding ligatures) — on `mac` and `workstation` only; servers render glyphs through your client terminal's font
+- **<a id="docker"></a>Docker** — [Docker Engine](https://docs.docker.com/engine/install/) (CE, CLI, containerd, Buildx, Compose plugin) from Docker's own apt repo, on `vps` and `workstation` only; never on `proxmox` or `mac`. Works on Ubuntu, Debian, and distributions built on either (Mint, Pop!_OS, LMDE), and adds the user to the `docker` group. If `docker` is already provided another way — Docker Desktop's WSL integration, or the distro's `docker.io` package — it is left alone, since Docker's packages conflict with both
 - **Rust** via [rustup](https://rustup.rs) with the `rust-analyzer` component — on every route except `proxmox`, which only keeps an existing toolchain current
 - **Symlinked configs** — `zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`, plus the Neovim/LazyVim overrides
 - **Global OpenCode instructions** — `opencode/` is symlinked to `~/.config/opencode` and its `AGENTS.md` applies across repositories

@@ -34,7 +34,8 @@ Liminal Salt visual theme and the current symlink-based installation model.
   `setup.sh` or `update.sh`.
 - Preserve platform behavior: `vps` runs as root and provisions `deploy`,
   `proxmox` runs as root without server hardening, and `workstation` runs as a
-  normal user with `sudo` for packages.
+  normal user with `sudo` for packages. Docker is installed on `vps` and
+  `workstation` only, never on `proxmox` or `mac`.
 - Preserve idempotence. Setup and update may be run repeatedly on an existing
   machine.
 - Use quoted paths and safe shell practices. Do not use destructive commands

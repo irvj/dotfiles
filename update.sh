@@ -260,11 +260,96 @@ ensure_charm_repo() {
     warn "charm apt repo unavailable, skipping glow"
     return 1
   fi
-  echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | $SUDO tee /etc/apt/sources.list.d/charm.list > /dev/null
+  if ! echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | \
+    $SUDO tee /etc/apt/sources.list.d/charm.list > /dev/null; then
+    warn "could not add the charm apt repo, skipping glow"
+    return 1
+  fi
+}
+
+# Docker Engine goes on the vps and workstation routes only, never proxmox or
+# mac. It is also left out when docker is already provided some other way —
+# Docker Desktop's WSL integration, or the distro's docker.io — since
+# docker-ce conflicts with both.
+docker_wanted() {
+  case "$PLATFORM" in
+    vps|workstation) ;;
+    *) return 1 ;;
+  esac
+  if command -v docker &>/dev/null &&
+    [[ "$(dpkg-query -W -f='${db:Status-Status}' docker-ce 2>/dev/null)" != "installed" ]]; then
+    return 1
+  fi
+}
+
+# Prints "<distro> <codename>" for Docker's apt repo, which is published per
+# distribution. Derivatives (Mint, Pop!_OS, LMDE) name the Ubuntu or Debian
+# release they are built on; anything else prints nothing.
+docker_release() {
+  (
+    . /etc/os-release
+    case "$ID" in
+      ubuntu) echo "ubuntu ${UBUNTU_CODENAME:-$VERSION_CODENAME}" ;;
+      debian) echo "debian $VERSION_CODENAME" ;;
+      *)
+        if [[ -n "${UBUNTU_CODENAME:-}" ]]; then
+          echo "ubuntu $UBUNTU_CODENAME"
+        elif [[ -n "${DEBIAN_CODENAME:-}" ]]; then
+          echo "debian $DEBIAN_CODENAME"
+        fi
+        ;;
+    esac
+  )
+}
+
+# Add Docker's apt repo before the one `apt-get update`, at the same paths the
+# vps route has always used: apt refuses one repo listed twice with different
+# keys. Returns non-zero when the repo is unavailable, so docker is left out
+# rather than failing the whole package step.
+ensure_docker_repo() {
+  local distro codename
+
+  if [[ -f /etc/apt/sources.list.d/docker.list ]]; then
+    return 0
+  fi
+
+  read -r distro codename <<< "$(docker_release)"
+  if [[ -z "$codename" ]]; then
+    warn "no Docker apt repo for this distribution, skipping docker"
+    return 1
+  fi
+
+  $SUDO install -m 0755 -d /etc/apt/keyrings
+  if ! fetch -fsSL "https://download.docker.com/linux/$distro/gpg" | $SUDO tee /etc/apt/keyrings/docker.asc > /dev/null; then
+    warn "docker apt repo unavailable, skipping docker"
+    return 1
+  fi
+  $SUDO chmod a+r /etc/apt/keyrings/docker.asc
+  if ! echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/$distro $codename stable" | \
+    $SUDO tee /etc/apt/sources.list.d/docker.list > /dev/null; then
+    warn "could not add the docker apt repo, skipping docker"
+    return 1
+  fi
+}
+
+# Membership lets the user run docker without sudo. It takes effect at the
+# next login, so the notice appears only on the run that adds it.
+ensure_docker_group() {
+  local user
+
+  user=$(id -un)
+  if [[ "$user" == "root" ]] || grep -qw docker <<< "$(id -nG "$user")"; then
+    return 0
+  fi
+  if ! $SUDO usermod -aG docker "$user"; then
+    warn "could not add $user to the docker group"
+    return 0
+  fi
+  info "added $user to the docker group; log in again to use docker without sudo"
 }
 
 update_apt() {
-  local output packages nr_conf nr_want
+  local output packages nr_conf nr_want docker=false
 
   packages=("${APT_PACKAGES[@]}")
   if ! $PVE_HOST; then
@@ -272,6 +357,10 @@ update_apt() {
   fi
   if ensure_charm_repo; then
     packages+=(glow)
+  fi
+  if docker_wanted && ensure_docker_repo; then
+    packages+=("${DOCKER_APT_PACKAGES[@]}")
+    docker=true
   fi
 
   # needrestart runs after every apt transaction and prints its scan progress
@@ -310,6 +399,10 @@ update_apt() {
     success "declared packages present"
   else
     info "installed missing packages"
+  fi
+
+  if $docker; then
+    ensure_docker_group
   fi
 }
 
