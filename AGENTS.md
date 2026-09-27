@@ -32,7 +32,8 @@ Liminal Salt visual theme and the current symlink-based installation model.
 - Inspect the relevant scripts and existing conventions before editing.
 - Keep package declarations in `lib/common.sh`; do not duplicate them in
   `setup.sh` or `update.sh`.
-- Preserve platform behavior: `vps` runs as root and provisions `deploy`,
+- Preserve platform behavior: `vps` runs as root and provisions a login user
+  (`deploy` unless `--user` names another, which may already exist),
   `proxmox` runs as root without server hardening, and `workstation` runs as a
   normal user with `sudo` for packages. Docker is installed on `vps` and
   `workstation` only, never on `proxmox` or `mac`.

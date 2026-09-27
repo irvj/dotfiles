@@ -19,16 +19,17 @@ curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash 
 **Runs as root.** Installs packages via apt, then provisions a hardened server:
 
 - `ufw` and `sudo`
-- a non-root `deploy` user with passwordless sudo and `docker` group membership, with root's SSH `authorized_keys` copied over
+- a non-root login user (`deploy` unless you pass `--user NAME`) with passwordless sudo and `docker` group membership, with root's SSH `authorized_keys` added to its own. An existing user is adopted rather than recreated: its keys are kept, and a sudoers file it already has with other rules is left alone
 - disables root SSH login and password authentication
 - enables `ufw` (allows OpenSSH only)
 
-The dotfiles environment, including [Docker](#docker), is installed for the `deploy` user.
+The dotfiles environment, including [Docker](#docker), is installed for that user.
 
-> **Warning:** This route locks out root SSH access and enables a firewall. Make sure your SSH key is in `/root/.ssh/authorized_keys` before running.
+> **Warning:** This route locks out root SSH access and enables a firewall. Make sure your SSH key is in `/root/.ssh/authorized_keys` before running. When the login user already exists (a re-run, or an existing server), setup lists what it will change — including that enabling ufw blocks any other incoming ports it has no rules for — and asks before touching anything.
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash -s vps
+curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash -s vps --user irvj   # a different login user
 ```
 
 ### `proxmox`
@@ -120,7 +121,7 @@ Set `DOTFILES_PRIVATE_REPO` or `DOTFILES_PRIVATE_DIR` to override the default re
 
 ## Options
 
-Pass `-y` to skip the interactive reset confirmation prompt:
+Pass `-y` to skip the confirmation prompts (the shell reset, and the vps route's existing-user check). Without a terminal and without `-y`, both are treated as "no" — the reset is skipped, and a vps re-run stops before changing anything:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/irvj/dotfiles/main/setup.sh | bash -s mac -y

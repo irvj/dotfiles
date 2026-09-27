@@ -5,20 +5,23 @@ set -eo pipefail
 # shell reset, cloning this repo, recording the platform), then hands off to
 # update.sh, which installs and configures everything else. Safe to re-run.
 
-USERNAME="deploy"
+# the vps route's login user; override with --user
+VPS_USER="deploy"
+VPS_USER_SET=false
 DOTFILES_REPO="https://github.com/irvj/dotfiles.git"
 AUTO_YES=false
 
 # --- argument parsing ---
 
 usage() {
-  echo "Usage: $0 <mac|vps|proxmox|workstation> [-y]"
+  echo "Usage: $0 <mac|vps|proxmox|workstation> [-y] [--user NAME]"
   echo ""
   echo "  mac          Personal Mac setup (run as current user)"
   echo "  vps          VPS provisioning (run as root)"
   echo "  proxmox      Proxmox host setup (run as root)"
   echo "  workstation  Linux workstation setup (run as current user)"
   echo "  -y           Skip reset confirmation prompt"
+  echo "  --user NAME  vps only: the login user to create or use (default: deploy)"
   exit 1
 }
 
@@ -35,9 +38,26 @@ esac
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -y) AUTO_YES=true; shift ;;
+    --user)
+      [[ $# -ge 2 ]] || usage
+      VPS_USER="$2"
+      VPS_USER_SET=true
+      shift 2
+      ;;
     *) usage ;;
   esac
 done
+
+if $VPS_USER_SET && [[ "$PLATFORM" != "vps" ]]; then
+  echo "Error: --user applies only to the vps route."
+  exit 1
+fi
+# Debian's default username rule, which also keeps the name free of dots:
+# sudo ignores a sudoers.d file whose name contains one.
+if [[ ! "$VPS_USER" =~ ^[a-z_][a-z0-9_-]*$ || "$VPS_USER" == "root" ]]; then
+  echo "Error: '$VPS_USER' is not a valid login user for the vps route."
+  exit 1
+fi
 
 # enforce privilege model
 if [[ "$PLATFORM" == "vps" || "$PLATFORM" == "proxmox" ]]; then
@@ -73,8 +93,12 @@ confirm() {
     return 0
   fi
   # under `curl | bash` stdin is the script itself, so read the answer from
-  # the terminal; with no terminal the redirect fails and the answer is no
+  # the terminal; with no terminal the answer is no
   local response
+  if ! : 2>/dev/null < /dev/tty; then
+    echo "$1 [y/N] no terminal to answer; pass -y to proceed"
+    return 1
+  fi
   read -rp "$1 [y/N] " response < /dev/tty || return 1
   [[ "$response" =~ ^[Yy]$ ]]
 }
@@ -131,8 +155,45 @@ install_bootstrap_packages() {
 
 # --- vps hardening ---
 
+# A re-run on a server already in use changes how it is logged in to, so say
+# what will change and ask first. A fresh server, where the user does not
+# exist yet, is not asked. Declining, or having no terminal to answer without
+# -y, exits before anything is installed or changed.
+confirm_existing_vps() {
+  local home
+
+  if ! id "$VPS_USER" &>/dev/null; then
+    return 0
+  fi
+  home=$(getent passwd "$VPS_USER" | cut -d: -f6)
+
+  print_header "Existing user: $VPS_USER"
+
+  if [[ -d "$home/.dotfiles" ]]; then
+    echo "$VPS_USER already exists and has the dotfiles installed."
+  else
+    echo "$VPS_USER already exists on this machine."
+  fi
+  echo "Continuing will:"
+  echo "  - add $VPS_USER to the sudo group, with passwordless sudo unless"
+  echo "    /etc/sudoers.d/$VPS_USER already has other rules"
+  echo "  - add root's SSH keys to $VPS_USER's (keys already there are kept)"
+  echo "  - turn off SSH login as root and SSH password login"
+  echo "  - enable ufw allowing OpenSSH; unless ufw already has rules for them,"
+  echo "    all other incoming ports (a web server's 80/443, say) are blocked"
+  echo "  - then offer the shell reset and install the dotfiles environment"
+  echo ""
+
+  if ! confirm "Continue?"; then
+    echo "Setup cancelled; nothing was changed."
+    exit 1
+  fi
+}
+
+# Creates or adopts the login user and sets VPS_HOME. The user may already
+# exist with its own keys and sudo rules, so both are added to, never replaced.
 harden_vps() {
-  local sudoers_tmp
+  local sudoers sudoers_rule sudoers_tmp ssh_dir keys key
 
   print_header "Harden VPS"
 
@@ -147,26 +208,51 @@ harden_vps() {
   apt-get install -y ufw sudo
 
   # create user (skip if already exists)
-  if ! id "$USERNAME" &>/dev/null; then
-    adduser --disabled-password --gecos "" "$USERNAME"
+  if ! id "$VPS_USER" &>/dev/null; then
+    adduser --disabled-password --gecos "" "$VPS_USER"
   fi
-  usermod -aG sudo "$USERNAME"
+  usermod -aG sudo "$VPS_USER"
+  VPS_HOME=$(getent passwd "$VPS_USER" | cut -d: -f6)
 
-  # passwordless sudo, validated before it is installed: a malformed file in
-  # sudoers.d breaks sudo for every user. update.sh relies on this to run its
-  # package steps as the deploy user.
-  sudoers_tmp=$(mktemp)
-  echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > "$sudoers_tmp"
-  visudo -c -q -f "$sudoers_tmp"
-  install -m 0440 -o root -g root "$sudoers_tmp" "/etc/sudoers.d/$USERNAME"
-  rm -f "$sudoers_tmp"
+  # Passwordless sudo, which update.sh needs to run its package steps without
+  # a terminal. Validated before it is installed: a malformed file in
+  # sudoers.d breaks sudo for every user. A file already there with other
+  # rules belongs to someone else and is left alone.
+  sudoers="/etc/sudoers.d/$VPS_USER"
+  sudoers_rule="$VPS_USER ALL=(ALL) NOPASSWD:ALL"
+  if [[ -f "$sudoers" && "$(cat "$sudoers")" != "$sudoers_rule" ]]; then
+    echo "Note: $sudoers already has other rules; leaving it unchanged."
+    echo "  Without passwordless sudo, dotup asks for $VPS_USER's password."
+  else
+    sudoers_tmp=$(mktemp)
+    echo "$sudoers_rule" > "$sudoers_tmp"
+    visudo -c -q -f "$sudoers_tmp"
+    install -m 0440 -o root -g root "$sudoers_tmp" "$sudoers"
+    rm -f "$sudoers_tmp"
+  fi
 
-  # copy ssh key from root
-  mkdir -p "/home/$USERNAME/.ssh"
-  cp /root/.ssh/authorized_keys "/home/$USERNAME/.ssh/"
-  chown -R "$USERNAME:$USERNAME" "/home/$USERNAME/.ssh"
-  chmod 700 "/home/$USERNAME/.ssh"
-  chmod 600 "/home/$USERNAME/.ssh/authorized_keys"
+  # Add root's SSH keys to the user's, skipping any already there, so the
+  # user can log in once root login is disabled below. Keys the user already
+  # has are kept. A file whose last line lacks a newline gets one first, or
+  # the next key would be glued onto that line.
+  ssh_dir="$VPS_HOME/.ssh"
+  keys="$ssh_dir/authorized_keys"
+  mkdir -p "$ssh_dir"
+  touch "$keys"
+  if [[ -s "$keys" && -n "$(tail -c1 "$keys")" ]]; then
+    echo >> "$keys"
+  fi
+  while IFS= read -r key || [[ -n "$key" ]]; do
+    if [[ -z "$key" || "$key" == \#* ]]; then
+      continue
+    fi
+    if ! grep -qxF -- "$key" "$keys"; then
+      printf '%s\n' "$key" >> "$keys"
+    fi
+  done < /root/.ssh/authorized_keys
+  chown -R "$VPS_USER:" "$ssh_dir"
+  chmod 700 "$ssh_dir"
+  chmod 600 "$keys"
 
   # lock down ssh via a drop-in. sshd reads the first value for each keyword,
   # and the main config's `Include /etc/ssh/sshd_config.d/*.conf` is near the
@@ -285,19 +371,20 @@ case "$PLATFORM" in
     ;;
 
   vps)
-    # -H so every script update.sh runs sees the deploy user's home
-    AS_DEPLOY="sudo -H -u $USERNAME"
+    # -H so every script update.sh runs sees the user's home
+    AS_USER="sudo -H -u $VPS_USER"
 
+    confirm_existing_vps
     install_bootstrap_packages ""
     harden_vps
-    reset_shell "/home/$USERNAME"
-    clone_dotfiles "/home/$USERNAME" "$AS_DEPLOY"
-    write_platform "/home/$USERNAME" "$AS_DEPLOY"
-    run_update "/home/$USERNAME" "$AS_DEPLOY"
-    chsh -s "$(command -v zsh)" "$USERNAME"
+    reset_shell "$VPS_HOME"
+    clone_dotfiles "$VPS_HOME" "$AS_USER"
+    write_platform "$VPS_HOME" "$AS_USER"
+    run_update "$VPS_HOME" "$AS_USER"
+    chsh -s "$(command -v zsh)" "$VPS_USER"
 
-    remind_git_identity "/home/$USERNAME"
-    print_header "Done. SSH in as $USERNAME"
+    remind_git_identity "$VPS_HOME"
+    print_header "Done. SSH in as $VPS_USER"
     ;;
 
   proxmox)
