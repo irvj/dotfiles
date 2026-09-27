@@ -22,17 +22,11 @@ skip_unavailable() {
   exit 0
 }
 
-# Materialize the private repo's skills into the skills directory registered in
-# opencode.json. The checkout is the source; ~/.local/share/opencode/skills is
-# the destination, the same split update-skills.sh uses for frontend-design.
-#
-# Everything private lands under a single `private/` subdirectory so its
-# provenance is the location itself: the wipe below can prune skills deleted
-# upstream without tracking what was copied. opencode scans skills paths
-# recursively for **/SKILL.md, so the extra nesting level still resolves.
-#
-# The copy is staged beside the destination and swapped in only once it is
-# complete, so a failure partway through leaves the previous skills in place.
+# Copy the private repo's skills into the skills directory registered in
+# opencode.json, under a single private/ subdirectory that is replaced whole,
+# so skills deleted upstream are pruned. opencode finds SKILL.md at any depth.
+# The copy is staged and swapped in only when complete, so a failure leaves the
+# previous skills in place.
 install_private_skills() {
   local src="$PRIVATE_DIR/opencode/skills"
   local staged="$SKILLS_DEST.staged"

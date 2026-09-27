@@ -5,23 +5,10 @@ DOTFILES="${DOTFILES:-$HOME/.dotfiles}"
 PRIVATE_DIR="${DOTFILES_PRIVATE_DIR:-$HOME/.local/share/opencode/private}"
 CLAUDE_DIR="$HOME/.claude"
 
-# Places the tracked Claude Code configuration in ~/.claude. Everything is
-# written as real files rather than linked:
-#
-# - settings.json: Claude Code writes to it itself (/config, /model), so a
-#   link would turn every in-app change into an uncommitted edit that stops
-#   dotup's pull. The tracked keys are merged over the existing file instead:
-#   they win on every run, and keys Claude Code added locally survive. A key
-#   removed from the repo stays on machines that already have it.
-# - CLAUDE.md: Cowork sessions skip a symlinked ~/.claude/CLAUDE.md, and any
-#   import that points outside the session's working directory, so the file is
-#   generated: the instructions shared with OpenCode, then the Claude-only
-#   additions.
-# - themes/: Claude Code's /theme editor writes to a theme file, which through
-#   a link would edit the repo, so the tracked themes are copied. Themes made
-#   in /theme that the repo does not track are left alone.
-#
-# Edits in the repo therefore reach a machine on its next dotup.
+# Places the tracked Claude Code configuration in ~/.claude as real files, not
+# links: Claude Code writes to settings.json and theme files itself, and Cowork
+# sessions skip a symlinked CLAUDE.md. Repo edits reach a machine on its next
+# dotup.
 
 CHANGED=()
 
@@ -59,7 +46,8 @@ install_staged "$staged" "$CLAUDE_DIR/CLAUDE.md"
 
 # before settings.json, so a theme exists by the time the setting selects it.
 # The staged name does not end in .json, so Claude Code, which watches this
-# directory, never loads a half-written theme.
+# directory, never loads a half-written theme. Themes the repo does not track
+# are left alone.
 mkdir -p "$CLAUDE_DIR/themes"
 for theme in "$DOTFILES/claude/themes/"*.json; do
   [[ -f "$theme" ]] || continue
@@ -71,9 +59,10 @@ done
 # --- settings.json ---
 
 # Merge order, later winning: the existing file, the tracked keys, then
-# anything the optional private layer provides. jq's `*` merges objects key by
-# key at every depth; any other value, arrays included, is replaced whole by
-# the later file.
+# anything the optional private layer provides, so keys Claude Code set locally
+# survive and a key removed from the repo stays where it already is. jq's `*`
+# merges objects key by key at every depth; any other value, arrays included,
+# is replaced whole by the later file.
 settings="$CLAUDE_DIR/settings.json"
 sources=()
 if [[ -e "$settings" ]]; then

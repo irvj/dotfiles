@@ -4,16 +4,11 @@ set -e
 DOTFILES="${DOTFILES:-$HOME/.dotfiles}"
 PRIVATE_DIR="${DOTFILES_PRIVATE_DIR:-$HOME/.local/share/opencode/private}"
 
-# Where newsboat reads its configuration.
-#
-# The snap runs confined: its $HOME is remapped to ~/snap/newsboat/<revision>,
-# and its `home` interface denies hidden paths in the real home — so a symlink
-# into either dotfiles checkout (both live under dotdirs) would resolve to a
-# path AppArmor refuses. Under snap the files are copied instead, which means
-# an edit reaches those machines on the next `dotup` rather than immediately.
-# snapd copies SNAP_USER_DATA forward on refresh, so the copy survives an
-# update, and `current` tracks the live revision once the snap has been run at
-# least once; before that we resolve the revision from `snap list`.
+# Where newsboat reads its configuration. The snap runs confined: its $HOME is
+# ~/snap/newsboat/<revision>, and it cannot read hidden paths in the real home,
+# so a link into a dotfiles checkout is refused and the files are copied
+# instead. snapd carries the copy forward on refresh. `current` exists once the
+# snap has run; before that, the revision comes from `snap list`.
 DEST=""
 MODE="link"
 if [[ -d "$HOME/snap/newsboat/current" ]]; then

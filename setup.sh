@@ -13,6 +13,7 @@ AUTO_YES=false
 
 # --- argument parsing ---
 
+# Print usage and exit 1.
 usage() {
   echo "Usage: $0 <mac|vps|proxmox|workstation> [-y] [--user NAME]"
   echo ""
@@ -80,6 +81,7 @@ fetch() {
   curl --connect-timeout 15 --speed-limit 1024 --speed-time 30 "$@"
 }
 
+# Print a banner for the next setup step.
 print_header() {
   echo ""
   echo "=========================================="
@@ -88,6 +90,7 @@ print_header() {
   echo ""
 }
 
+# Ask a yes/no question; -y answers yes.
 confirm() {
   if $AUTO_YES; then
     return 0
@@ -105,6 +108,7 @@ confirm() {
 
 # --- reset shell ---
 
+# Offer to remove an existing shell, nvim, and tmux setup from a home directory.
 reset_shell() {
   local home_dir="$1"
 
@@ -142,8 +146,9 @@ reset_shell() {
 
 # --- linux bootstrap packages ---
 
-# Just enough to clone this repo and add apt repositories. update.sh upgrades
-# the system and installs the declared package set from lib/common.sh.
+# Just enough to clone this repo, plus gnupg for the apt repository keys
+# update.sh adds. update.sh upgrades the system and installs the declared
+# package set from lib/common.sh.
 install_bootstrap_packages() {
   local pkg_cmd="$1"
 
@@ -207,7 +212,6 @@ harden_vps() {
 
   apt-get install -y ufw sudo
 
-  # create user (skip if already exists)
   if ! id "$VPS_USER" &>/dev/null; then
     adduser --disabled-password --gecos "" "$VPS_USER"
   fi
@@ -278,13 +282,13 @@ EOF
   fi
   systemctl restart ssh 2>/dev/null || systemctl restart sshd
 
-  # firewall
   ufw allow OpenSSH
   ufw --force enable
 }
 
 # --- mac setup ---
 
+# Install Homebrew unless it is already present.
 install_homebrew() {
   print_header "Install Homebrew"
 
@@ -302,6 +306,7 @@ install_homebrew() {
 
 # --- shared functions ---
 
+# Clone this repo into ~/.dotfiles, or pull it when it is already there.
 clone_dotfiles() {
   local home_dir="$1"
   local run_cmd="$2"
@@ -342,11 +347,11 @@ run_update() {
   esac
 }
 
+# Remind the user to create ~/.gitconfig.local, which gitconfig includes for
+# the git identity; without it, commits fail with "please tell me who you are".
 remind_git_identity() {
   local home_dir="$1"
 
-  # gitconfig includes ~/.gitconfig.local for identity but setup doesn't create
-  # it; without it, commits fail with "please tell me who you are"
   if [[ ! -f "$home_dir/.gitconfig.local" ]]; then
     echo ""
     echo "Reminder: set your git identity in $home_dir/.gitconfig.local"

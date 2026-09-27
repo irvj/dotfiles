@@ -36,6 +36,7 @@ YELLOW='\033[0;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
+# Status lines: ✓ done or up to date, → changed, ✗ failed.
 success() { echo -e "${GREEN}✓${NC} $1"; }
 info()    { echo -e "${YELLOW}→${NC} $1"; }
 error()   { echo -e "${RED}✗${NC} $1"; }
@@ -66,8 +67,8 @@ warn() {
 snap_version() { snap list "$1" 2>/dev/null | awk 'NR==2 {print $2}' || true; }
 
 # Installed tool versions without a leading "v", or "none" when absent. sed
-# reads all of its input, so the tool never takes a SIGPIPE under pipefail the
-# way it could from `head -1`.
+# reads all of its input, so the tool is never cut off by SIGPIPE under
+# pipefail.
 nvim_version()     { nvim --version 2>/dev/null | sed -n '1s/^NVIM v//p' | grep . || echo "none"; }
 lazygit_version()  { lazygit --version 2>/dev/null | sed -n 's/.*, version=\([^,]*\).*/\1/p' | grep . || echo "none"; }
 starship_version() { starship --version 2>/dev/null | sed -n '1s/^starship //p' | grep . || echo "none"; }
@@ -115,6 +116,7 @@ esac
 
 # --- dotfiles ---
 
+# Pull this repo and report how many files changed.
 pull_dotfiles() {
   local before after output changed count
 
@@ -142,6 +144,8 @@ pull_dotfiles() {
 
 # --- system packages: mac ---
 
+# Update Homebrew, install any missing declared formulae, upgrade everything,
+# and report version changes for neovim, lazygit, and starship.
 update_brew() {
   local output brew_bin nvim_before lazygit_before starship_before
   local tool before after
@@ -172,8 +176,7 @@ update_brew() {
     die "brew update failed" "$output"
   fi
 
-  # ensure every declared formula is present (installs newly-added ones on
-  # machines set up before the package was added; no-op when all present)
+  # installs any formula added to the list since this machine was set up
   if ! output=$(brew install "${BREW_PACKAGES[@]}" 2>&1); then
     die "formula install failed" "$output"
   fi
@@ -202,6 +205,7 @@ update_brew() {
   done
 }
 
+# Install the JetBrains Mono Nerd Font cask if it is missing.
 install_mac_font() {
   local output
 
@@ -235,13 +239,11 @@ init_linux() {
     APT_UPGRADE="full-upgrade"
   fi
 
-  # apt's normal output is captured by the callers. Interactive: leave stderr
-  # on the terminal so a debconf dialog stays visible and answerable.
-  # Non-interactive (under Ansible): fold stderr into the captured stdout
-  # rather than discarding it, or an apt failure is reported with no reason
-  # attached; and answer every prompt with its default, since nothing can
-  # answer it, keeping locally modified config files over the package's.
-  # LC_ALL=C forces English apt output so the greps stay reliable.
+  # Interactive: apt's stderr stays on the terminal, so a debconf dialog can be
+  # answered. Unattended (Ansible): stderr joins the captured output so a
+  # failure keeps its reason, and every prompt takes its default, keeping
+  # locally modified config files. LC_ALL=C keeps apt's output in English for
+  # the greps.
   APT_ENV=(LC_ALL=C)
   APT_OPTS=()
   if [[ -t 1 && -r /dev/tty ]]; then
@@ -253,6 +255,7 @@ init_linux() {
   fi
 }
 
+# Run apt-get with the settings from init_linux.
 apt_get() {
   $SUDO env "${APT_ENV[@]}" apt-get "${APT_OPTS[@]}" "$@" 2>"$APT_PROMPT_FD"
 }
@@ -313,10 +316,11 @@ docker_release() {
   )
 }
 
-# Add Docker's apt repo before the one `apt-get update`, at the same paths the
-# vps route has always used: apt refuses one repo listed twice with different
-# keys. Returns non-zero when the repo is unavailable, so docker is left out
-# rather than failing the whole package step.
+# Add Docker's apt repo before the one `apt-get update`. Servers set up earlier
+# already have these files at these paths, and apt rejects one repo listed
+# twice with different keys, so the paths must not change. Returns non-zero
+# when the repo is unavailable, so docker is left out rather than failing the
+# whole package step.
 ensure_docker_repo() {
   local distro codename
 
@@ -359,6 +363,8 @@ ensure_docker_group() {
   info "added $user to the docker group; log in again to use docker without sudo"
 }
 
+# Upgrade system packages and install the declared set, adding glow and Docker
+# when their repos are available.
 update_apt() {
   local output packages nr_conf nr_want docker=false
 
@@ -401,8 +407,7 @@ update_apt() {
     REBOOT_NEEDED=true
   fi
 
-  # ensure every declared package is present (installs newly-added ones on
-  # machines provisioned before the package was added; no-op otherwise)
+  # installs any package added to the list since this machine was set up
   if ! output=$(apt_get install -y "${packages[@]}"); then
     die "package install failed" "$output"
   fi
@@ -466,6 +471,7 @@ update_newsboat_snap() {
 
 # --- release tools: linux ---
 
+# Install or update neovim from its GitHub release into /opt/nvim.
 update_nvim() {
   local latest current dl
 
@@ -493,6 +499,7 @@ update_nvim() {
   rm -rf "$dl"
 }
 
+# Install or update lazygit from its GitHub release.
 update_lazygit() {
   local latest current dl
 
@@ -516,6 +523,7 @@ update_lazygit() {
   rm -rf "$dl"
 }
 
+# Install or update starship with its official installer.
 update_starship() {
   local latest current
 
@@ -562,6 +570,8 @@ install_linux_font() {
 
 # --- release tools: all platforms ---
 
+# Install OpenCode if it is missing, otherwise upgrade it when a newer release
+# exists.
 update_opencode() {
   local bin="" before after latest output
 
@@ -647,11 +657,10 @@ update_claude() {
   fi
 }
 
-# Installed via the official rustup.rs installer on every platform — including
-# mac — so rust is managed identically everywhere and `rustup update` can
-# self-update. (Homebrew's rustup build disables self-update, so it is
-# deliberately NOT in BREW_PACKAGES.) The proxmox route does not install it,
-# but keeps an existing toolchain current.
+# Install or update the rust toolchain and rust-analyzer with rustup.rs, on mac
+# too: Homebrew's rustup disables self-update, so it is not in BREW_PACKAGES.
+# The proxmox route keeps an existing toolchain current but does not install
+# one.
 update_rust() {
   local output
 
@@ -667,9 +676,8 @@ update_rust() {
     fi
     success "rustup installed"
   else
-    # only report when something actually changes to keep routine updates
-    # quiet. Captured rather than piped to `grep -q`, which exits at the first
-    # match and could kill rustup mid-update with SIGPIPE.
+    # captured, not piped: grep -q exits at its first match, which would kill
+    # rustup partway through with SIGPIPE
     if ! output=$(rustup update 2>&1); then
       warn "rust toolchain update failed" "$output"
     elif grep -q "updated" <<< "$output"; then
@@ -677,9 +685,8 @@ update_rust() {
     fi
   fi
 
-  # rust-analyzer LSP component (required by LazyVim's Rust extra; the cargo
-  # shim at ~/.cargo/bin/rust-analyzer errors without it). Only report when
-  # it is actually installed (or fails).
+  # LazyVim's Rust extra needs the rust-analyzer component; the cargo shim at
+  # ~/.cargo/bin/rust-analyzer errors without it
   if ! grep -q "^rust-analyzer" <<< "$(rustup component list --installed 2>/dev/null)"; then
     if ! output=$(rustup component add rust-analyzer 2>&1); then
       warn "rust-analyzer install failed" "$output"
@@ -691,6 +698,7 @@ update_rust() {
 
 # --- configs ---
 
+# Link the tracked configs into place with install.sh.
 link_configs() {
   # stderr stays visible for notices such as a directory moved aside
   if ! "$DOTFILES/install.sh" > /dev/null; then
@@ -715,8 +723,9 @@ sync_private() {
   fi
 }
 
-# after the private sync, so a private urls file reflects this run's pull, and
-# after the snap install, so the snap's config location already exists
+# Place the newsboat config. Runs after the private sync, so a private urls file
+# reflects this run's pull, and after the snap install, so the snap's config
+# location exists.
 install_newsboat_config() {
   local output
 
@@ -727,7 +736,8 @@ install_newsboat_config() {
   success "$output"
 }
 
-# after the private sync, so a private settings overlay reflects this run's pull
+# Place the Claude Code config on the routes that get Claude. Runs after the
+# private sync, so a private settings overlay reflects this run's pull.
 install_claude_config() {
   local output
 
@@ -743,6 +753,7 @@ install_claude_config() {
   fi
 }
 
+# Fetch the external OpenCode skills.
 update_skills() {
   local output
 
@@ -757,12 +768,12 @@ update_skills() {
 
 # --- plugins ---
 
+# Clone any missing declared zsh plugin, then pull every plugin checkout.
 update_zsh_plugins() {
   local url dir name output before updated=false
 
   mkdir -p "$HOME/.zsh"
 
-  # clone any declared plugin that is missing
   for url in "${ZSH_PLUGINS[@]}"; do
     dir="$HOME/.zsh/$(basename "$url" .git)"
     if [[ ! -d "$dir" ]]; then
@@ -775,7 +786,7 @@ update_zsh_plugins() {
     fi
   done
 
-  # then pull every plugin checkout, declared or added by hand
+  # every checkout, including plugins added by hand
   for dir in "$HOME/.zsh"/*/; do
     dir="${dir%/}"
     [[ -d "$dir/.git" ]] || continue
@@ -794,8 +805,8 @@ update_zsh_plugins() {
   fi
 }
 
-# after install.sh (which sets up the LazyVim config) and after neovim itself
-# is upgraded, so plugins sync against the binary they will run on
+# Sync LazyVim plugins. Runs after install.sh sets up the LazyVim config and
+# after neovim is upgraded, so plugins sync against the binary they run on.
 sync_lazyvim() {
   local output
 
@@ -808,6 +819,7 @@ sync_lazyvim() {
 
 # --- summary ---
 
+# Report a pending reboot and any warnings; exit 2 when there were warnings.
 finish() {
   local w
 

@@ -73,22 +73,19 @@ ZSH_PLUGINS=(
   https://github.com/zsh-users/zsh-syntax-highlighting
 )
 
-# curl that gives up on a stalled transfer rather than hanging dotup, which
-# matters most under Ansible where nothing is watching. A fixed --max-time
-# would cut off a large download on a slow link, so a transfer is abandoned
-# only when it stalls: no connection within 15s, or under 1 KB/s for 30s.
-# setup.sh and opencode/update-skills.sh do not source this file and pass the
-# same flags directly.
+# curl that gives up on a stalled transfer instead of hanging: no connection
+# within 15s, or under 1 KB/s for 30s. A fixed --max-time would cut off a large
+# download on a slow link. setup.sh and opencode/update-skills.sh pass the same
+# flags directly, since they do not source this file.
 fetch() {
   curl --connect-timeout 15 --speed-limit 1024 --speed-time 30 "$@"
 }
 
-# Resolve a GitHub repo's latest release tag from the /releases/latest redirect.
-# The unauthenticated api.github.com allows 60 requests/hour per IP and a whole
-# fleet shares one WAN address; the redirect has no such limit. Prints the bare
-# version with no leading "v". Returns non-zero when the tag does not resolve,
-# which callers must treat as fatal: an empty version builds a download URL that
-# 404s, leaving tar to unpack an HTML error page.
+# Resolve a GitHub repo's latest release tag from the /releases/latest redirect,
+# which has no rate limit, unlike api.github.com's 60 requests/hour per IP that
+# a whole fleet behind one address shares. Prints the version with no leading
+# "v". Returns non-zero when the tag does not resolve; callers must not build a
+# download URL from an empty version, which 404s and hands tar an HTML page.
 latest_tag() {
   local repo="$1" tag
   tag=$(fetch -sI "https://github.com/$repo/releases/latest" \

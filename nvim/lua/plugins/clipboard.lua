@@ -3,8 +3,8 @@
 -- Over SSH, LazyVim intentionally leaves 'clipboard' empty so normal y/p stay
 -- fast and never hang on a terminal clipboard query. To copy OUT to the local
 -- machine you use the '+' register, which Neovim sends via OSC 52 (tmux
--- forwards it -- see `set-clipboard on` in tmux.conf). Typing `"+y` by hand is
--- awful, so map it to <leader>y (Space-y):
+-- forwards it -- see `set-clipboard on` in tmux.conf). These keys map it to
+-- <leader>y (Space-y):
 --
 --   <leader>y   normal/visual : yank motion/selection to system clipboard
 --   <leader>Y   normal        : yank the current line to system clipboard

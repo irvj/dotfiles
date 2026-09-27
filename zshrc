@@ -45,7 +45,7 @@ export PATH="$HOME/.opencode/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
 
 # snap puts binaries in /snap/bin, which only reaches PATH through
 # /etc/profile.d in login shells; add it explicitly so newsboat resolves in
-# every shell. The guard keeps this a no-op on mac, where /snap/bin is absent.
+# every shell.
 [[ -d /snap/bin ]] && export PATH="$PATH:/snap/bin"
 
 # --- rust (cargo) ---
@@ -66,6 +66,7 @@ command -v starship > /dev/null && eval "$(starship init zsh)"
 
 # --- sudo esc-esc ---
 
+# Prefix the current command line with sudo (bound to Esc Esc).
 sudo-command-line() {
   BUFFER="sudo $BUFFER"
   zle end-of-line
@@ -89,6 +90,7 @@ alias lg='lazygit'
 
 # --- sparse clone ---
 
+# Sparse-clone a repo, checking out only the given folders.
 gcs() {
   if [[ $# -lt 2 ]]; then
     echo "usage: gcs <repo-url> <folder1> [folder2] ..."
@@ -108,6 +110,7 @@ alias gsa='git sparse-checkout add'
 alias gsl='git sparse-checkout list'
 alias gsd='git sparse-checkout disable'
 
+# Print the git and sparse-checkout aliases.
 ghelp() {
   local bold='\033[1m' dim='\033[2m' cyan='\033[36m' reset='\033[0m'
 
@@ -153,6 +156,7 @@ fi
 
 # --- extract function ---
 
+# Extract an archive by its extension.
 extract() {
   case "$1" in
     *.tar.gz|*.tgz) tar xzf "$1" ;;
@@ -169,6 +173,7 @@ extract() {
 
 # --- docker helpers ---
 
+# List running containers with their localhost URLs.
 docks() {
   local bold='\033[1m' dim='\033[2m' cyan='\033[36m' reset='\033[0m'
 

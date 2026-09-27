@@ -7,7 +7,7 @@ return {
       formatters_by_ft = { php = {} },
     },
   },
-  -- Don't auto-install the PHP style tools we no longer use.
+  -- Don't auto-install the PHP style tools this config does not use.
   {
     "mason-org/mason.nvim",
     opts = function(_, opts)
