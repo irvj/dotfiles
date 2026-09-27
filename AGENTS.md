@@ -24,8 +24,8 @@ Liminal Salt visual theme and the current symlink-based installation model.
 - `newsboat/` contains the tracked Liminal Salt newsboat configuration and the
   script that places it, with any private overlay, where newsboat reads it.
 - `nvim/` contains LazyVim overrides and the tracked Liminal Salt theme.
-- `claude/` contains the tracked Claude Code settings and Claude-only
-  instructions, and the script that merges and generates them into
+- `claude/` contains the tracked Claude Code settings, Claude-only
+  instructions, and Liminal Salt theme, and the script that places them into
   `~/.claude` on the `mac`, `workstation`, and `vps` routes.
 - `opencode/` contains the public OpenCode configuration, theme, instructions,
   and the external skill-sync script.

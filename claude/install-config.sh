@@ -5,7 +5,7 @@ DOTFILES="${DOTFILES:-$HOME/.dotfiles}"
 PRIVATE_DIR="${DOTFILES_PRIVATE_DIR:-$HOME/.local/share/opencode/private}"
 CLAUDE_DIR="$HOME/.claude"
 
-# Places the tracked Claude Code configuration in ~/.claude. Both files are
+# Places the tracked Claude Code configuration in ~/.claude. Everything is
 # written as real files rather than linked:
 #
 # - settings.json: Claude Code writes to it itself (/config, /model), so a
@@ -17,6 +17,9 @@ CLAUDE_DIR="$HOME/.claude"
 #   import that points outside the session's working directory, so the file is
 #   generated: the instructions shared with OpenCode, then the Claude-only
 #   additions.
+# - themes/: Claude Code's /theme editor writes to a theme file, which through
+#   a link would edit the repo, so the tracked themes are copied. Themes made
+#   in /theme that the repo does not track are left alone.
 #
 # Edits in the repo therefore reach a machine on its next dotup.
 
@@ -51,6 +54,19 @@ staged=$(mktemp "$CLAUDE_DIR/.CLAUDE.md.XXXXXX")
   cat "$DOTFILES/claude/CLAUDE.md"
 } > "$staged"
 install_staged "$staged" "$CLAUDE_DIR/CLAUDE.md"
+
+# --- themes ---
+
+# before settings.json, so a theme exists by the time the setting selects it.
+# The staged name does not end in .json, so Claude Code, which watches this
+# directory, never loads a half-written theme.
+mkdir -p "$CLAUDE_DIR/themes"
+for theme in "$DOTFILES/claude/themes/"*.json; do
+  [[ -f "$theme" ]] || continue
+  staged=$(mktemp "$CLAUDE_DIR/themes/.$(basename "$theme").XXXXXX")
+  cp "$theme" "$staged"
+  install_staged "$staged" "$CLAUDE_DIR/themes/$(basename "$theme")"
+done
 
 # --- settings.json ---
 
