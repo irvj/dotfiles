@@ -1,6 +1,6 @@
 # dotfiles
 
-Personal dotfiles and machine setup scripts for macOS and Linux. One curl command sets up a full terminal environment: zsh with [Starship](https://starship.rs) prompt (powerline display, [Liminal Salt](https://github.com/irvj/liminal-salt) palette), tmux, neovim with [LazyVim](https://www.lazyvim.org), lazygit, [glow](https://github.com/charmbracelet/glow), and a curated set of CLI tools.
+Personal dotfiles and machine setup scripts for macOS and Linux. One curl command sets up a full terminal environment: zsh with [Starship](https://starship.rs) prompt (powerline display, [Liminal Salt](https://github.com/irvj/liminal-salt-theme) palette), tmux, neovim with [LazyVim](https://www.lazyvim.org), lazygit, [glow](https://github.com/charmbracelet/glow), and a curated set of CLI tools.
 
 Every route installs the same environment (see [What every route installs](#what-every-route-installs)), with a few noted exceptions for servers; the routes differ mainly in who they run as and what server provisioning they add. Setup does only the one-time work (provisioning, cloning this repo, recording the platform), then runs `update.sh` — the same script behind `dotup` — to install everything else, so a fresh machine and an updated one converge on the same state. Setup is safe to re-run.
 
