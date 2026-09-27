@@ -37,10 +37,17 @@
 ## Editing
 
 - Favor correctness, maintainability, security, and portability over expedience.
-- Avoid unnecessary abstractions, dependencies, compatibility layers, and comments.
-- Add comments only when they explain non-obvious behavior or constraints.
+- Avoid unnecessary abstractions, dependencies, and compatibility layers.
 - Do not rewrite or reformat unrelated code.
 - Treat generated files and symlinks according to the project's existing conventions.
+
+## Comments
+
+- Comments describe what the code does now, never what it used to do, what changed, or what a fix addressed; git history records that.
+- Give functions and methods a docblock in the language's convention stating what they do, and their parameters and return value where useful. Keep it short: do not restate the signature or narrate the body.
+- Prefer typed parameters and return types wherever the language supports them, so the signature documents itself.
+- Add inline comments only where the code is not self-documenting, such as a non-obvious constraint, edge case, workaround, or reason the code is written the way it is. Do not explain what is already obvious.
+- When changing code, update or remove any comment the change makes inaccurate.
 
 ## Verification
 
