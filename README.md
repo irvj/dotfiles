@@ -81,6 +81,7 @@ Regardless of route, setup installs the same environment, except where noted:
 - **Zsh** with [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions) and [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting), set as the default shell
 - **JetBrains Mono Nerd Font** (powerline glyphs, icons, coding ligatures) — on `mac` and `workstation` only; servers render glyphs through your client terminal's font
 - **<a id="docker"></a>Docker** — [Docker Engine](https://docs.docker.com/engine/install/) (CE, CLI, containerd, Buildx, Compose plugin) from Docker's own apt repo, on `vps` and `workstation` only; never on `proxmox` or `mac`. Works on Ubuntu, Debian, and distributions built on either (Mint, Pop!_OS, LMDE), and adds the user to the `docker` group. If `docker` is already provided another way — Docker Desktop's WSL integration, or the distro's `docker.io` package — it is left alone, since Docker's packages conflict with both
+- **[Claude Code](https://code.claude.com)** — on `mac`, `workstation`, and `vps`, never `proxmox`. Installed with Anthropic's native installer into `~/.local/bin`, which keeps it updated in the background; `dotup` installs it where it's missing and runs `claude update`. Its configuration is placed in `~/.claude` as real files rather than links: `~/.claude/CLAUDE.md` is generated from `opencode/AGENTS.md` (the instructions shared with OpenCode) followed by `claude/CLAUDE.md` (Claude-only additions), and the keys in `claude/settings.json` are merged into `~/.claude/settings.json` on every `dotup`, so they win while anything Claude Code set locally (a theme, a model) survives. Removing a key from the repo leaves it on machines that already have it. Sign-in and MCP servers live in `~/.claude.json`, which is never touched
 - **Rust** via [rustup](https://rustup.rs) with the `rust-analyzer` component — on every route except `proxmox`, which only keeps an existing toolchain current
 - **Symlinked configs** — `zshrc`, `tmux.conf`, `gitconfig`, `starship.toml`, `ghostty/config`, plus the Neovim/LazyVim overrides
 - **Global OpenCode instructions** — `opencode/` is symlinked to `~/.config/opencode` and its `AGENTS.md` applies across repositories
@@ -95,8 +96,8 @@ Run `dotup` from any shell. It brings the machine to the state its route declare
 
 1. **Dotfiles** — pulls this repo, and re-runs itself if `update.sh` changed
 2. **Packages** — upgrades all system packages (Homebrew or apt) and installs any missing ones declared in [`lib/common.sh`](lib/common.sh), so the declared set is always complete. On Linux this is one `apt-get update`, one upgrade, and one install
-3. **Tools** — installs or updates neovim, lazygit, starship, OpenCode, rust, and the Nerd Font where the route has them (arch-aware: x86_64 or arm64 where applicable). On Linux, newsboat's snap is installed if absent and refreshed; snapd already refreshes snaps on its own schedule, so `dotup` just pulls that forward. On mac, neovim, lazygit, starship, and newsboat ride along with the Homebrew upgrade
-4. **Configs** — re-runs `install.sh` (re-symlinks everything and prunes links to removed files), syncs the optional private extension, places the newsboat config, and fetches the OpenCode skills
+3. **Tools** — installs or updates neovim, lazygit, starship, OpenCode, Claude Code, rust, and the Nerd Font where the route has them (arch-aware: x86_64 or arm64 where applicable). On Linux, newsboat's snap is installed if absent and refreshed; snapd already refreshes snaps on its own schedule, so `dotup` just pulls that forward. On mac, neovim, lazygit, starship, and newsboat ride along with the Homebrew upgrade
+4. **Configs** — re-runs `install.sh` (re-symlinks everything and prunes links to removed files), syncs the optional private extension, places the newsboat and Claude Code configs, and fetches the OpenCode skills
 5. **Plugins** — installs or updates the zsh plugins, then syncs LazyVim plugins against the neovim just installed
 6. **Summary** — recommends a reboot when the Linux kernel or core libraries were updated, and lists any warnings
 
@@ -114,6 +115,7 @@ What this repository defines is only how an optional private layer is loaded:
 
 - Private configuration, when present, can be exposed through `OPENCODE_CONFIG` by `zshrc` and merged over the global config.
 - Optional private skills may be materialized into the registered skills directory without becoming part of this repository.
+- Optional private Claude Code settings may be merged into `~/.claude/settings.json` after the tracked ones, so they win over them.
 - Optional private application configuration may be materialized into the location that application reads. Where an application runs confined (a snap, for instance) the files are copied rather than linked, so an edit to the private source reaches those machines on the next `dotup` rather than immediately.
 - Future integrations should remain isolated from the public source of truth and require no public behavior when the private extension is absent.
 

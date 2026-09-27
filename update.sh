@@ -71,6 +71,16 @@ snap_version() { snap list "$1" 2>/dev/null | awk 'NR==2 {print $2}' || true; }
 nvim_version()     { nvim --version 2>/dev/null | sed -n '1s/^NVIM v//p' | grep . || echo "none"; }
 lazygit_version()  { lazygit --version 2>/dev/null | sed -n 's/.*, version=\([^,]*\).*/\1/p' | grep . || echo "none"; }
 starship_version() { starship --version 2>/dev/null | sed -n '1s/^starship //p' | grep . || echo "none"; }
+claude_version()   { claude --version 2>/dev/null | sed -n '1s/ .*//p' | grep . || echo "none"; }
+
+# Claude Code, and its config, go on the routes you work from directly: mac,
+# workstation, and vps. Never proxmox.
+claude_wanted() {
+  case "$PLATFORM" in
+    mac|vps|workstation) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 
 # --- platform ---
 
@@ -286,6 +296,7 @@ docker_wanted() {
 # distribution. Derivatives (Mint, Pop!_OS, LMDE) name the Ubuntu or Debian
 # release they are built on; anything else prints nothing.
 docker_release() {
+  [[ -r /etc/os-release ]] || return 0
   (
     . /etc/os-release
     case "$ID" in
@@ -603,6 +614,39 @@ update_opencode() {
   fi
 }
 
+# Claude Code from Anthropic's native installer on every route that gets it,
+# mac included: a per-user install into ~/.local/bin that needs no sudo and
+# updates itself in the background between runs. `claude update` only pulls
+# that forward, so a dotup run leaves nothing pending.
+update_claude() {
+  local output before after
+
+  if ! claude_wanted; then
+    return 0
+  fi
+
+  if ! command -v claude &>/dev/null; then
+    if ! output=$(fetch -fsSL https://claude.ai/install.sh | bash 2>&1) || ! command -v claude &>/dev/null; then
+      warn "claude code install failed" "$output"
+      return 0
+    fi
+    success "claude v$(claude_version) installed"
+    return 0
+  fi
+
+  before=$(claude_version)
+  if ! output=$(claude update 2>&1); then
+    warn "claude code update failed" "$output"
+    return 0
+  fi
+  after=$(claude_version)
+  if [[ "$before" != "$after" ]]; then
+    info "claude v$before → v$after"
+  else
+    success "claude v$after"
+  fi
+}
+
 # Installed via the official rustup.rs installer on every platform — including
 # mac — so rust is managed identically everywhere and `rustup update` can
 # self-update. (Homebrew's rustup build disables self-update, so it is
@@ -681,6 +725,22 @@ install_newsboat_config() {
     return 0
   fi
   success "$output"
+}
+
+# after the private sync, so a private settings overlay reflects this run's pull
+install_claude_config() {
+  local output
+
+  if ! claude_wanted; then
+    return 0
+  fi
+  if ! output=$("$DOTFILES/claude/install-config.sh" 2>&1); then
+    warn "claude config install failed" "$output"
+  elif [[ "$output" == *"updated"* ]]; then
+    info "$output"
+  else
+    success "$output"
+  fi
 }
 
 update_skills() {
@@ -804,12 +864,14 @@ case "$PLATFORM" in
     ;;
 esac
 update_opencode
+update_claude
 update_rust
 
 # configs
 link_configs
 sync_private
 install_newsboat_config
+install_claude_config
 update_skills
 
 # plugins

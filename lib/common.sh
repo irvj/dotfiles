@@ -22,6 +22,7 @@ APT_PACKAGES=(
   build-essential
   fontconfig
   fzf
+  jq
   python3-venv
   python3-pip
   xsel
@@ -58,6 +59,7 @@ BREW_PACKAGES=(
   ripgrep
   fd
   fzf
+  jq
   neovim
   lazygit
   starship
