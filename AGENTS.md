@@ -6,16 +6,21 @@ Liminal Salt visual theme and the current symlink-based installation model.
 
 ## Repository Map
 
-- `setup.sh` provisions a new machine for `mac`, `vps`, `proxmox`, or
-  `workstation`.
+- `setup.sh` bootstraps a new machine for `mac`, `vps`, `proxmox`, or
+  `workstation`: one-time provisioning, the clone, and the platform record,
+  then it runs `update.sh` to install everything else.
 - `install.sh` links the tracked shell, terminal, OpenCode, and Neovim
   configuration into the user's home directory.
-- `update.sh` pulls this repository, reinstalls links, updates plugins and
-  tools, and applies platform-specific package updates.
+- `update.sh` (`dotup`) converges a machine on its platform's declared state:
+  it pulls this repository, upgrades and installs packages, installs or
+  updates tools, reinstalls links, and updates plugins. Install logic lives
+  here rather than in `setup.sh`, so every step must also work on a machine
+  that has none of it yet. Essential steps abort (exit 1); optional ones warn
+  and continue (exit 2).
 - `sync-private.sh` syncs the optional private extension and materializes
   whatever it provides into the locations those applications read.
-- `lib/common.sh` is the single source of truth for apt and Homebrew package
-  lists, plus Linux release-architecture detection.
+- `lib/common.sh` is the single source of truth for apt, Homebrew, and zsh
+  plugin lists, plus Linux release-architecture detection.
 - `newsboat/` contains the tracked Liminal Salt newsboat configuration and the
   script that places it, with any private overlay, where newsboat reads it.
 - `nvim/` contains LazyVim overrides and the tracked Liminal Salt theme.

@@ -1,10 +1,12 @@
 #!/bin/bash
 set -eo pipefail
 
+# Bootstraps a machine: the one-time work (server provisioning, the optional
+# shell reset, cloning this repo, recording the platform), then hands off to
+# update.sh, which installs and configures everything else. Safe to re-run.
+
 USERNAME="deploy"
 DOTFILES_REPO="https://github.com/irvj/dotfiles.git"
-# raw base for fetching the shared package list before the repo is cloned
-RAW_BASE="https://raw.githubusercontent.com/irvj/dotfiles/main"
 AUTO_YES=false
 
 # --- argument parsing ---
@@ -108,107 +110,17 @@ reset_shell() {
   echo "Reset complete."
 }
 
-# --- linux package + tool install ---
+# --- linux bootstrap packages ---
 
-install_linux_packages() {
+# Just enough to clone this repo and add apt repositories. update.sh upgrades
+# the system and installs the declared package set from lib/common.sh.
+install_bootstrap_packages() {
   local pkg_cmd="$1"
 
-  print_header "Install Linux packages"
+  print_header "Install bootstrap packages"
 
-  # a Proxmox VE host needs full-upgrade; plain upgrade holds back packages
-  # that pull in new dependencies and leaves the host partially upgraded
-  local upgrade="upgrade"
-  command -v pveversion &>/dev/null && upgrade="full-upgrade"
-  $pkg_cmd apt update && $pkg_cmd apt "$upgrade" -y
-
-  # bootstrap curl so we can fetch the shared package list (single source of
-  # truth in lib/common.sh), then install the declared packages
-  $pkg_cmd apt install -y curl ca-certificates gnupg
-  curl -fsSL "$RAW_BASE/lib/common.sh" -o /tmp/dotfiles-common.sh
-  source /tmp/dotfiles-common.sh
-  detect_arch
-  $pkg_cmd apt install -y "${APT_PACKAGES[@]}"
-
-  # install starship
-  curl -fsSL https://starship.rs/install.sh | $pkg_cmd sh -s -- -y
-
-  # release downloads go to a scratch directory rather than the caller's cwd
-  local dl
-  dl=$(mktemp -d)
-
-  # install neovim; replace /opt/nvim outright, since mv onto an existing
-  # directory would nest the new release inside it and keep the old binary
-  curl -fsSLo "$dl/nvim.tar.gz" "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-${NVIM_ARCH}.tar.gz"
-  tar xzf "$dl/nvim.tar.gz" -C "$dl"
-  $pkg_cmd rm -rf /opt/nvim
-  $pkg_cmd mv "$dl/nvim-linux-${NVIM_ARCH}" /opt/nvim
-  $pkg_cmd ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
-
-  # install lazygit
-  LAZYGIT_VERSION=$(latest_tag jesseduffield/lazygit) || exit 1
-  curl -fsSLo "$dl/lazygit.tar.gz" "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_${LG_ARCH}.tar.gz"
-  tar xf "$dl/lazygit.tar.gz" -C "$dl" lazygit
-  $pkg_cmd install "$dl/lazygit" /usr/local/bin
-  rm -rf "$dl"
-
-  # install glow (via charm apt repo)
-  $pkg_cmd mkdir -p /etc/apt/keyrings
-  curl -fsSL https://repo.charm.sh/apt/gpg.key | $pkg_cmd gpg --batch --yes --dearmor -o /etc/apt/keyrings/charm.gpg
-  echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | $pkg_cmd tee /etc/apt/sources.list.d/charm.list > /dev/null
-  $pkg_cmd apt update
-  $pkg_cmd apt install -y glow
-
-  install_newsboat "$pkg_cmd"
-}
-
-# --- newsboat install (snap) ---
-
-# newsboat ships no prebuilt binaries and its apt build trails upstream badly,
-# so it comes from the maintainer's own snap (see lib/common.sh). snapd was
-# just installed with the declared packages, so its socket may not be up yet;
-# `snap wait` blocks until seeding finishes rather than racing it. Snap is
-# unavailable in some containers (notably LXC), and newsboat is not essential
-# to the environment, so a failure here must not abort provisioning.
-install_newsboat() {
-  local pkg_cmd="$1"
-
-  print_header "Install newsboat"
-
-  $pkg_cmd systemctl enable --now snapd.socket > /dev/null 2>&1 || true
-  $pkg_cmd snap wait system seed.loaded > /dev/null 2>&1 || true
-
-  if SNAP_OUTPUT=$($pkg_cmd snap install newsboat 2>&1); then
-    echo "newsboat installed."
-  elif grep -q "does not fully support snapd" <<< "$SNAP_OUTPUT"; then
-    echo "snapd is not supported in this container; skipping newsboat."
-    echo "To enable it: grant the container nesting and fuse on the Proxmox"
-    echo "host (pct set <vmid> -features nesting=1,fuse=1), then reboot it."
-  else
-    echo "Warning: newsboat snap install failed. Skipping."
-    echo "$SNAP_OUTPUT"
-  fi
-}
-
-# --- OpenCode install ---
-
-install_opencode() {
-  local home_dir="$1"
-  local run_cmd="$2"
-  local method="$3"
-  local version
-
-  print_header "Install OpenCode"
-
-  if [[ "$method" == "brew" ]]; then
-    brew install anomalyco/tap/opencode
-    version=$(opencode --version)
-  else
-    curl -fsSL https://opencode.ai/install | \
-      $run_cmd env HOME="$home_dir" bash -s -- --no-modify-path
-    version=$($run_cmd env HOME="$home_dir" "$home_dir/.opencode/bin/opencode" --version)
-  fi
-
-  echo "OpenCode v$version installed."
+  $pkg_cmd apt-get update
+  $pkg_cmd apt-get install -y git curl ca-certificates gnupg
 }
 
 # --- docker install ---
@@ -217,7 +129,6 @@ install_docker() {
   print_header "Install Docker"
 
   # add docker apt repo
-  apt install -y ca-certificates gnupg
   install -m 0755 -d /etc/apt/keyrings
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
   chmod a+r /etc/apt/keyrings/docker.asc
@@ -226,13 +137,15 @@ install_docker() {
     "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
     $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list
 
-  apt update
-  apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  apt-get update
+  apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 }
 
 # --- vps hardening ---
 
 harden_vps() {
+  local sudoers_tmp
+
   print_header "Harden VPS"
 
   # require root's SSH key before we disable password login, or the new user
@@ -243,14 +156,22 @@ harden_vps() {
     exit 1
   fi
 
-  apt install -y ufw sudo
+  apt-get install -y ufw sudo
 
   # create user (skip if already exists)
   if ! id "$USERNAME" &>/dev/null; then
     adduser --disabled-password --gecos "" "$USERNAME"
-    usermod -aG sudo "$USERNAME"
-    echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> "/etc/sudoers.d/$USERNAME"
   fi
+  usermod -aG sudo "$USERNAME"
+
+  # passwordless sudo, validated before it is installed: a malformed file in
+  # sudoers.d breaks sudo for every user. update.sh relies on this to run its
+  # package steps as the deploy user.
+  sudoers_tmp=$(mktemp)
+  echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > "$sudoers_tmp"
+  visudo -c -q -f "$sudoers_tmp"
+  install -m 0440 -o root -g root "$sudoers_tmp" "/etc/sudoers.d/$USERNAME"
+  rm -f "$sudoers_tmp"
 
   # copy ssh key from root
   mkdir -p "/home/$USERNAME/.ssh"
@@ -263,14 +184,24 @@ harden_vps() {
   # and the main config's `Include /etc/ssh/sshd_config.d/*.conf` is near the
   # top — so a cloud-init drop-in (50-cloud-init.conf, PasswordAuthentication
   # yes) would win over edits to the main file. A 01- drop-in sorts first and
-  # wins. The main-file edits stay as a fallback for images without an Include.
+  # wins. The main-file edits stay as a fallback for images without an Include;
+  # they are anchored so comments that mention a keyword are left alone.
   mkdir -p /etc/ssh/sshd_config.d
   cat > /etc/ssh/sshd_config.d/01-hardening.conf <<'EOF'
 PermitRootLogin no
 PasswordAuthentication no
 EOF
-  sed -i 's/#\?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
-  sed -i 's/#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+  sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+  sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+
+  # validate before restarting: a config sshd rejects would leave no way back
+  # in. With socket activation the privilege separation directory may not
+  # exist yet, and `sshd -t` fails without it.
+  mkdir -p /run/sshd
+  if ! sshd -t; then
+    echo "Error: sshd rejected the new configuration; ssh was not restarted." >&2
+    exit 1
+  fi
   systemctl restart ssh 2>/dev/null || systemctl restart sshd
 
   # firewall
@@ -280,107 +211,22 @@ EOF
 
 # --- mac setup ---
 
-setup_mac() {
-  print_header "Mac setup"
+install_homebrew() {
+  print_header "Install Homebrew"
 
-  # install homebrew if not present
-  if ! command -v brew &>/dev/null; then
-    echo "Installing Homebrew..."
-    # fetch first: a failed download inside the argument would hand bash an
-    # empty script, which succeeds
-    local brew_installer
-    brew_installer=$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)
-    /bin/bash -c "$brew_installer"
-
-    # add brew to PATH for this session
-    if [[ -f /opt/homebrew/bin/brew ]]; then
-      eval "$(/opt/homebrew/bin/brew shellenv)"
-    elif [[ -f /usr/local/bin/brew ]]; then
-      eval "$(/usr/local/bin/brew shellenv)"
-    fi
+  if command -v brew &>/dev/null || [[ -x /opt/homebrew/bin/brew || -x /usr/local/bin/brew ]]; then
+    echo "Homebrew already installed."
+    return 0
   fi
 
-  # fetch the shared package list (single source of truth in lib/common.sh);
-  # curl ships with macOS
-  curl -fsSL "$RAW_BASE/lib/common.sh" -o /tmp/dotfiles-common.sh
-  source /tmp/dotfiles-common.sh
-  brew install "${BREW_PACKAGES[@]}"
-
-  brew install --cask font-jetbrains-mono-nerd-font
-}
-
-# --- nerd font install (linux) ---
-
-install_nerd_font() {
-  local home_dir="$1"
-  local run_cmd="$2"
-
-  print_header "Install Nerd Font"
-
-  $run_cmd mkdir -p "$home_dir/.local/share/fonts"
-  # streamed straight into tar as the target user, so no temp file in /tmp
-  curl -fsSL "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz" | \
-    $run_cmd tar xJf - -C "$home_dir/.local/share/fonts"
-  fc-cache -fv
-}
-
-# --- rust toolchain (rustup.rs) ---
-
-# Installed via the official rustup.rs installer on every platform — including
-# mac — so rust is managed identically everywhere and `rustup update` can
-# self-update. (Homebrew's rustup build disables self-update, so it is
-# deliberately NOT in BREW_PACKAGES.) CARGO_HOME/RUSTUP_HOME are set explicitly
-# rather than relying on $HOME so the install lands in the target user's home
-# under `sudo -u` (vps route). --no-modify-path: our zshrc already sources
-# ~/.cargo/env, so the installer must not touch shell profiles.
-install_rust() {
-  local home_dir="$1"
-  local run_cmd="$2"
-
-  print_header "Install Rust (rustup)"
-
-  local cargo_home="$home_dir/.cargo"
-  local rustup_home="$home_dir/.rustup"
-
-  if [[ -x "$cargo_home/bin/rustup" ]]; then
-    echo "rustup already installed, skipping toolchain install."
-  else
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-      $run_cmd env CARGO_HOME="$cargo_home" RUSTUP_HOME="$rustup_home" \
-        sh -s -- -y --no-modify-path
-  fi
-
-  # rust-analyzer LSP component (required by LazyVim's Rust extra; the cargo
-  # shim at ~/.cargo/bin/rust-analyzer errors without it). Idempotent — no-op
-  # when already present. update.sh keeps it current on existing machines.
-  $run_cmd env CARGO_HOME="$cargo_home" RUSTUP_HOME="$rustup_home" \
-    "$cargo_home/bin/rustup" component add rust-analyzer
+  # fetch first: a failed download inside the argument would hand bash an
+  # empty script, which succeeds
+  local brew_installer
+  brew_installer=$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)
+  /bin/bash -c "$brew_installer"
 }
 
 # --- shared functions ---
-
-setup_zsh_plugins() {
-  local home_dir="$1"
-  local run_cmd="$2"
-
-  print_header "Install zsh plugins"
-
-  $run_cmd mkdir -p "$home_dir/.zsh"
-
-  if [[ -d "$home_dir/.zsh/zsh-autosuggestions" ]]; then
-    echo "zsh-autosuggestions already installed, pulling latest..."
-    $run_cmd git -C "$home_dir/.zsh/zsh-autosuggestions" pull
-  else
-    $run_cmd git clone https://github.com/zsh-users/zsh-autosuggestions "$home_dir/.zsh/zsh-autosuggestions"
-  fi
-
-  if [[ -d "$home_dir/.zsh/zsh-syntax-highlighting" ]]; then
-    echo "zsh-syntax-highlighting already installed, pulling latest..."
-    $run_cmd git -C "$home_dir/.zsh/zsh-syntax-highlighting" pull
-  else
-    $run_cmd git clone https://github.com/zsh-users/zsh-syntax-highlighting "$home_dir/.zsh/zsh-syntax-highlighting"
-  fi
-}
 
 clone_dotfiles() {
   local home_dir="$1"
@@ -404,43 +250,22 @@ write_platform() {
   echo "$PLATFORM" | $run_cmd tee "$home_dir/.dotfiles/.platform" > /dev/null
 }
 
-run_install() {
+# update.sh installs and configures everything else: packages, tools, configs,
+# and plugins. --skip-pull, since the clone above is already current. It exits
+# 2 when optional steps failed, which should not stop the rest of setup.
+run_update() {
   local home_dir="$1"
   local run_cmd="$2"
+  local status=0
 
-  print_header "Run install.sh"
+  print_header "Install environment (update.sh)"
 
-  $run_cmd "$home_dir/.dotfiles/install.sh"
-}
-
-update_opencode_skills() {
-  local home_dir="$1"
-  local run_cmd="$2"
-
-  print_header "Update OpenCode skills"
-
-  $run_cmd "$home_dir/.dotfiles/opencode/update-skills.sh"
-}
-
-sync_private_dotfiles() {
-  local home_dir="$1"
-  local run_cmd="$2"
-
-  print_header "Sync private dotfiles"
-
-  # optional: a failure must not abort provisioning
-  if ! $run_cmd "$home_dir/.dotfiles/sync-private.sh"; then
-    echo "Warning: private dotfiles sync failed, continuing without it."
-  fi
-}
-
-install_newsboat_config() {
-  local home_dir="$1"
-  local run_cmd="$2"
-
-  print_header "Install newsboat config"
-
-  $run_cmd "$home_dir/.dotfiles/newsboat/install-config.sh"
+  $run_cmd "$home_dir/.dotfiles/update.sh" --skip-pull || status=$?
+  case "$status" in
+    0) ;;
+    2) echo "Some optional steps failed (listed above); run dotup later to retry them." ;;
+    *) echo "Error: update.sh failed." >&2; exit "$status" ;;
+  esac
 }
 
 remind_git_identity() {
@@ -462,75 +287,52 @@ remind_git_identity() {
 case "$PLATFORM" in
   mac)
     reset_shell "$HOME"
-    setup_mac
-    install_opencode "$HOME" "" "brew"
-    install_rust "$HOME" ""
-    setup_zsh_plugins "$HOME" ""
+    install_homebrew
     clone_dotfiles "$HOME" ""
     write_platform "$HOME" ""
-    sync_private_dotfiles "$HOME" ""
-    run_install "$HOME" ""
-    install_newsboat_config "$HOME" ""
-    update_opencode_skills "$HOME" ""
+    run_update "$HOME" ""
 
     remind_git_identity "$HOME"
     print_header "Done. Restart your terminal."
     ;;
 
   vps)
-    install_linux_packages ""
+    # -H so every script update.sh runs sees the deploy user's home
+    AS_DEPLOY="sudo -H -u $USERNAME"
+
+    install_bootstrap_packages ""
     install_docker
     harden_vps
     usermod -aG docker "$USERNAME"
-    install_opencode "/home/$USERNAME" "sudo -u $USERNAME" "curl"
-    install_nerd_font "/home/$USERNAME" "sudo -u $USERNAME"
-    install_rust "/home/$USERNAME" "sudo -u $USERNAME"
     reset_shell "/home/$USERNAME"
-    setup_zsh_plugins "/home/$USERNAME" "sudo -u $USERNAME"
-    clone_dotfiles "/home/$USERNAME" "sudo -u $USERNAME"
-    write_platform "/home/$USERNAME" "sudo -u $USERNAME"
-    sync_private_dotfiles "/home/$USERNAME" "sudo -u $USERNAME"
-    run_install "/home/$USERNAME" "sudo -u $USERNAME"
-    install_newsboat_config "/home/$USERNAME" "sudo -u $USERNAME"
-    update_opencode_skills "/home/$USERNAME" "sudo -u $USERNAME"
-    chsh -s "$(which zsh)" "$USERNAME"
+    clone_dotfiles "/home/$USERNAME" "$AS_DEPLOY"
+    write_platform "/home/$USERNAME" "$AS_DEPLOY"
+    run_update "/home/$USERNAME" "$AS_DEPLOY"
+    chsh -s "$(command -v zsh)" "$USERNAME"
 
     remind_git_identity "/home/$USERNAME"
     print_header "Done. SSH in as $USERNAME"
     ;;
 
   proxmox)
-    install_linux_packages ""
-    install_opencode "/root" "" "curl"
-    install_nerd_font "/root" ""
+    install_bootstrap_packages ""
     reset_shell "/root"
-    setup_zsh_plugins "/root" ""
     clone_dotfiles "/root" ""
     write_platform "/root" ""
-    sync_private_dotfiles "/root" ""
-    run_install "/root" ""
-    install_newsboat_config "/root" ""
-    update_opencode_skills "/root" ""
-    chsh -s "$(which zsh)" root
+    run_update "/root" ""
+    chsh -s "$(command -v zsh)" root
 
     remind_git_identity "/root"
     print_header "Done. Restart your shell."
     ;;
 
   workstation)
-    install_linux_packages "sudo"
-    install_opencode "$HOME" "" "curl"
-    install_nerd_font "$HOME" ""
-    install_rust "$HOME" ""
+    install_bootstrap_packages "sudo"
     reset_shell "$HOME"
-    setup_zsh_plugins "$HOME" ""
     clone_dotfiles "$HOME" ""
     write_platform "$HOME" ""
-    sync_private_dotfiles "$HOME" ""
-    run_install "$HOME" ""
-    install_newsboat_config "$HOME" ""
-    update_opencode_skills "$HOME" ""
-    sudo chsh -s "$(which zsh)" "$USER"
+    run_update "$HOME" ""
+    sudo chsh -s "$(command -v zsh)" "$USER"
 
     remind_git_identity "$HOME"
     print_header "Done. Restart your terminal."

@@ -1,17 +1,14 @@
 #!/bin/bash
-# Shared package lists and helpers, sourced by both setup.sh (provisioning)
-# and update.sh (dotup). Single source of truth: add a package here and both
-# a fresh setup and a `dotup` on existing machines pick it up.
+# Shared package lists and helpers, sourced by update.sh (dotup), which
+# setup.sh also runs to finish provisioning. Single source of truth: add a
+# package here and both a fresh setup and a `dotup` on existing machines pick
+# it up.
 
 # apt packages for the Linux routes (vps, proxmox, workstation).
 # NOTE: glow and newsboat are intentionally absent. glow comes from the Charm
 # apt repo; newsboat comes from the snap store, because the apt build trails
 # upstream by several releases and is missing entirely from some (24.04 has no
-# newsboat at all). Both are handled separately in setup.sh and update.sh.
-# snapd is declared here since newsboat needs it, and squashfuse alongside it:
-# an unprivileged LXC cannot attach loop devices, so snapd's self-check refuses
-# to run until it can mount squashfs through FUSE instead. That also needs
-# nesting and fuse granted to the container on the Proxmox host.
+# newsboat at all). Both are handled separately in update.sh.
 APT_PACKAGES=(
   git
   curl
@@ -28,6 +25,14 @@ APT_PACKAGES=(
   python3-venv
   python3-pip
   xsel
+)
+
+# apt packages newsboat's snap needs, installed everywhere APT_PACKAGES is
+# except on a Proxmox VE host, which skips newsboat. squashfuse sits alongside
+# snapd because an unprivileged LXC cannot attach loop devices, so snapd's
+# self-check refuses to run until it can mount squashfs through FUSE instead.
+# That also needs nesting and fuse granted to the container on the Proxmox host.
+SNAP_APT_PACKAGES=(
   snapd
   squashfuse
 )
@@ -48,6 +53,12 @@ BREW_PACKAGES=(
   starship
   glow
   newsboat
+)
+
+# zsh plugins, cloned into ~/.zsh/<repo name> and sourced by zshrc.
+ZSH_PLUGINS=(
+  https://github.com/zsh-users/zsh-autosuggestions
+  https://github.com/zsh-users/zsh-syntax-highlighting
 )
 
 # Resolve a GitHub repo's latest release tag from the /releases/latest redirect.
