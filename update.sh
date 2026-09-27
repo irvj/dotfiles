@@ -256,7 +256,7 @@ ensure_charm_repo() {
   fi
 
   $SUDO mkdir -p /etc/apt/keyrings
-  if ! curl -fsSL https://repo.charm.sh/apt/gpg.key | $SUDO gpg --batch --yes --dearmor -o /etc/apt/keyrings/charm.gpg; then
+  if ! fetch -fsSL https://repo.charm.sh/apt/gpg.key | $SUDO gpg --batch --yes --dearmor -o /etc/apt/keyrings/charm.gpg; then
     warn "charm apt repo unavailable, skipping glow"
     return 1
   fi
@@ -379,7 +379,7 @@ update_nvim() {
   # replace /opt/nvim outright, since mv onto an existing directory would nest
   # the new release inside it and keep the old binary
   dl=$(mktemp -d)
-  if ! { curl -fsSLo "$dl/nvim.tar.gz" "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-${NVIM_ARCH}.tar.gz" &&
+  if ! { fetch -fsSLo "$dl/nvim.tar.gz" "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-${NVIM_ARCH}.tar.gz" &&
     tar xzf "$dl/nvim.tar.gz" -C "$dl" &&
     $SUDO rm -rf /opt/nvim &&
     $SUDO mv "$dl/nvim-linux-${NVIM_ARCH}" /opt/nvim &&
@@ -404,7 +404,7 @@ update_lazygit() {
 
   info "lazygit v$current → v$latest"
   dl=$(mktemp -d)
-  if ! { curl -fsSLo "$dl/lazygit.tar.gz" "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${latest}_Linux_${LG_ARCH}.tar.gz" &&
+  if ! { fetch -fsSLo "$dl/lazygit.tar.gz" "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${latest}_Linux_${LG_ARCH}.tar.gz" &&
     tar xf "$dl/lazygit.tar.gz" -C "$dl" lazygit &&
     $SUDO install "$dl/lazygit" /usr/local/bin; }; then
     warn "lazygit install failed"
@@ -426,7 +426,7 @@ update_starship() {
   fi
 
   info "starship v$current → v$latest"
-  if ! curl -fsSL https://starship.rs/install.sh | $SUDO sh -s -- -y > /dev/null; then
+  if ! fetch -fsSL https://starship.rs/install.sh | $SUDO sh -s -- -y > /dev/null; then
     warn "starship install failed"
   fi
 }
@@ -445,7 +445,7 @@ install_linux_font() {
 
   info "installing jetbrains mono nerd font..."
   mkdir -p "$fonts"
-  if ! curl -fsSL "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz" | \
+  if ! fetch -fsSL "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz" | \
     tar xJf - -C "$fonts"; then
     warn "jetbrains mono nerd font install failed"
     return 0
@@ -475,7 +475,7 @@ update_opencode() {
       fi
       bin=$(command -v opencode)
     else
-      if ! curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path > /dev/null; then
+      if ! fetch -fsSL https://opencode.ai/install | bash -s -- --no-modify-path > /dev/null; then
         warn "opencode install failed"
         return 0
       fi
@@ -524,7 +524,7 @@ update_rust() {
     fi
     info "installing rust toolchain (rustup)"
     # --no-modify-path: zshrc already sources ~/.cargo/env
-    if ! output=$(curl --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs | sh -s -- -y --no-modify-path 2>&1); then
+    if ! output=$(fetch --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs | sh -s -- -y --no-modify-path 2>&1); then
       warn "rustup install failed" "$output"
       return 0
     fi

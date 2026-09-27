@@ -7,9 +7,13 @@ RAW_BASE="https://raw.githubusercontent.com/anthropics/skills/main/skills/fronte
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT
 
+# give up on a stalled transfer rather than hang dotup (see fetch in
+# lib/common.sh)
+CURL_OPTS=(--connect-timeout 15 --speed-limit 1024 --speed-time 30)
+
 mkdir -p "$TMP_DIR/frontend-design"
-curl -fsSL "$RAW_BASE/SKILL.md" -o "$TMP_DIR/frontend-design/SKILL.md"
-curl -fsSL "$RAW_BASE/LICENSE.txt" -o "$TMP_DIR/frontend-design/LICENSE.txt"
+curl "${CURL_OPTS[@]}" -fsSL "$RAW_BASE/SKILL.md" -o "$TMP_DIR/frontend-design/SKILL.md"
+curl "${CURL_OPTS[@]}" -fsSL "$RAW_BASE/LICENSE.txt" -o "$TMP_DIR/frontend-design/LICENSE.txt"
 
 if [[ -f "$SKILL_DIR/SKILL.md" ]] && cmp -s "$TMP_DIR/frontend-design/SKILL.md" "$SKILL_DIR/SKILL.md" && \
   [[ -f "$SKILL_DIR/LICENSE.txt" ]] && cmp -s "$TMP_DIR/frontend-design/LICENSE.txt" "$SKILL_DIR/LICENSE.txt"; then

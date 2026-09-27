@@ -54,12 +54,15 @@ export PATH="$HOME/.opencode/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
 
 # --- plugins ---
 
-source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
-source ~/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# guarded so a shell opened before dotup has installed them (or after a failed
+# clone) still starts cleanly; syntax-highlighting must stay last
+[ -f ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh ] && source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
+[ -f ~/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && source ~/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # --- starship prompt ---
 
-eval "$(starship init zsh)"
+# falls back to zsh's default prompt until starship is installed
+command -v starship > /dev/null && eval "$(starship init zsh)"
 
 # --- sudo esc-esc ---
 

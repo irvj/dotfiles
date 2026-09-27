@@ -54,6 +54,12 @@ fi
 
 # --- utility functions ---
 
+# give up on a stalled transfer rather than hang; matches fetch in
+# lib/common.sh, which is not available until the repo is cloned
+fetch() {
+  curl --connect-timeout 15 --speed-limit 1024 --speed-time 30 "$@"
+}
+
 print_header() {
   echo ""
   echo "=========================================="
@@ -130,7 +136,7 @@ install_docker() {
 
   # add docker apt repo
   install -m 0755 -d /etc/apt/keyrings
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  fetch -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
   chmod a+r /etc/apt/keyrings/docker.asc
 
   echo \
@@ -222,7 +228,7 @@ install_homebrew() {
   # fetch first: a failed download inside the argument would hand bash an
   # empty script, which succeeds
   local brew_installer
-  brew_installer=$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)
+  brew_installer=$(fetch -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)
   /bin/bash -c "$brew_installer"
 }
 
