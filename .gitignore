@@ -1,6 +1,8 @@
 # --- machine state ---
 
 .platform
+# written by OpenCode where ~/.config/opencode links to opencode/
+opencode/cli.json
 
 # --- macos ---
 

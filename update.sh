@@ -736,6 +736,19 @@ install_newsboat_config() {
   success "$output"
 }
 
+# Merge the tracked OpenCode terminal client settings into its cli.json.
+install_opencode_config() {
+  local output
+
+  if ! output=$("$DOTFILES/opencode/install-config.sh" 2>&1); then
+    warn "opencode config install failed" "$output"
+  elif [[ "$output" == *"updated"* ]]; then
+    info "$output"
+  else
+    success "$output"
+  fi
+}
+
 # Place the Claude Code config on the routes that get Claude. Runs after the
 # private sync, so a private settings overlay reflects this run's pull.
 install_claude_config() {
@@ -883,6 +896,7 @@ update_rust
 link_configs
 sync_private
 install_newsboat_config
+install_opencode_config
 install_claude_config
 update_skills
 

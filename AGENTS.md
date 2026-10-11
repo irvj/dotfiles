@@ -28,7 +28,8 @@ Liminal Salt visual theme and the current symlink-based installation model.
   instructions, and Liminal Salt theme, and the script that places them into
   `~/.claude` on the `mac`, `workstation`, and `vps` routes.
 - `opencode/` contains the public OpenCode configuration, theme, instructions,
-  and the external skill-sync script.
+  terminal client settings and the script that merges them into OpenCode's
+  `cli.json`, and the external skill-sync script.
 
 ## Change Rules
 

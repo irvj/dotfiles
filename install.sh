@@ -58,8 +58,8 @@ if [[ -d "$HOME/.config/opencode" && ! -L "$HOME/.config/opencode" ]]; then
   # Preserve an existing OpenCode config directory and link only managed files.
   ln -sf "$DOTFILES/opencode/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
   ln -sf "$DOTFILES/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
-  ln -sf "$DOTFILES/opencode/tui.json" "$HOME/.config/opencode/tui.json"
   link_files "$HOME/.config/opencode/themes" "$DOTFILES/opencode/themes/"*.json
+  prune_dangling "$HOME/.config/opencode"
 else
   ln -sfn "$DOTFILES/opencode" "$HOME/.config/opencode"
 fi
