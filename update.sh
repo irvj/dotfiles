@@ -73,6 +73,7 @@ nvim_version()     { nvim --version 2>/dev/null | sed -n '1s/^NVIM v//p' | grep 
 lazygit_version()  { lazygit --version 2>/dev/null | sed -n 's/.*, version=\([^,]*\).*/\1/p' | grep . || echo "none"; }
 starship_version() { starship --version 2>/dev/null | sed -n '1s/^starship //p' | grep . || echo "none"; }
 claude_version()   { claude --version 2>/dev/null | sed -n '1s/ .*//p' | grep . || echo "none"; }
+opencode_version() { opencode --version 2>/dev/null | sed -n '1s/^[^0-9]*//p' | grep . || echo "none"; }
 
 # Claude Code, and its config, go on the routes you work from directly: mac,
 # workstation, and vps. Never proxmox.
@@ -570,57 +571,56 @@ install_linux_font() {
 
 # --- release tools: all platforms ---
 
-# Install OpenCode if it is missing, otherwise upgrade it when a newer release
-# exists.
+# Install OpenCode 2.x, replacing a 1.x install, or upgrade it when a newer
+# release exists. 2.x is its own channel: GitHub releases, the `opencode`
+# formula, and `opencode upgrade` from 1.x all stay on 1.x.
 update_opencode() {
-  local bin="" before after latest output
+  local before after latest output
 
-  if command -v opencode &>/dev/null; then
-    bin=$(command -v opencode)
-  elif [[ -x "$HOME/.opencode/bin/opencode" ]]; then
-    bin="$HOME/.opencode/bin/opencode"
-  fi
+  before=$(opencode_version)
 
-  if [[ -z "$bin" ]]; then
-    if [[ "$PLATFORM" == "mac" ]]; then
-      if ! output=$(brew install anomalyco/tap/opencode 2>&1); then
-        warn "opencode install failed" "$output"
-        return 0
-      fi
-      bin=$(command -v opencode)
-    else
-      if ! fetch -fsSL https://opencode.ai/install | bash -s -- --no-modify-path > /dev/null; then
-        warn "opencode install failed"
-        return 0
-      fi
-      bin="$HOME/.opencode/bin/opencode"
+  if [[ "$PLATFORM" == "mac" ]]; then
+    # update_brew has already upgraded an installed opencode-v2
+    if brew list --formula opencode-v2 &>/dev/null; then
+      success "opencode v$before"
+      return 0
     fi
-    success "opencode v$($bin --version) installed"
-    return 0
-  fi
-
-  before=$($bin --version 2>/dev/null || echo "none")
-
-  # `opencode upgrade` asks api.github.com, which allows 60 requests/hour per
-  # IP, and a whole fleet shares one WAN address. The release redirect costs no
-  # quota, so it decides whether the upgrade is worth running at all. An
-  # unresolvable tag leaves $latest empty, which runs the upgrade.
-  latest=$(latest_tag anomalyco/opencode 2>/dev/null || echo "")
-  if [[ -n "$latest" && "$before" == "$latest" ]]; then
-    success "opencode v$before"
-    return 0
-  fi
-
-  if ! output=$($bin upgrade 2>&1); then
-    warn "opencode upgrade failed" "$output"
-    return 0
-  fi
-  after=$($bin --version 2>/dev/null || echo "none")
-
-  if [[ "$before" != "$after" ]]; then
-    info "opencode v$before → v$after"
+    # the 1.x formula installs the same binary, so brew refuses both at once
+    if brew list --formula opencode &>/dev/null; then
+      if ! output=$(brew uninstall opencode 2>&1); then
+        warn "opencode 1.x removal failed" "$output"
+        return 0
+      fi
+    fi
+    if ! output=$(brew install anomalyco/tap/opencode-v2 2>&1); then
+      warn "opencode install failed" "$output"
+      return 0
+    fi
   else
-    success "opencode v$after"
+    # The v2 installer's own latest-version lookup is unreliable, so it is
+    # always given an explicit version from the npm package it downloads.
+    latest=$(fetch -fsSL https://registry.npmjs.org/-/package/@opencode/cli/dist-tags 2>/dev/null \
+      | sed -n 's/.*"latest":"\([^"]*\)".*/\1/p' || true)
+    if [[ -z "$latest" ]]; then
+      warn "could not resolve the latest opencode version"
+      return 0
+    fi
+    if [[ "$before" == "$latest" ]]; then
+      success "opencode v$before"
+      return 0
+    fi
+    if ! output=$(fetch -fsSL https://opencode.ai/v2/install \
+      | bash -s -- --no-modify-path --version "$latest" 2>&1); then
+      warn "opencode install failed" "$output"
+      return 0
+    fi
+  fi
+
+  after=$(opencode_version)
+  if [[ "$before" == "none" ]]; then
+    success "opencode v$after installed"
+  else
+    info "opencode v$before → v$after"
   fi
 }
 
